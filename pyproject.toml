@@ -6,10 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
 	"pydantic>=2.11.7",
-	"rich>=14.0.0",
-	"tcrutils>=13.1.34",
+	"tcrutils>=13.1.37",
 	"aiohttp>=3.12.13",
 	"aiolimiter>=1.2.1",
+	"rich>=14.0.0",
+	"textual>=3.5.0",
+	"arguably>=1.3.0",
 ]
 license = { text = "GPL-3.0" }
 authors = [{ name = "anamoyee" }]
@@ -29,6 +31,10 @@ classifiers = [
 	"Operating System :: Microsoft :: Windows",
 	"Operating System :: Microsoft :: MS-DOS",
 ]
+
+[project.scripts]
+zooo = "zooo.ui:main"
+zoo = "zooo.ui:main"
 
 [build-system]
 requires = ["hatchling"]
