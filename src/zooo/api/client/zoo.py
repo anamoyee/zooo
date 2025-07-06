@@ -14,12 +14,12 @@ from ._base import BaseClient, BaseHook, ResultDict
 
 class ZooHook(BaseHook[UserInfo | ProfileInfo | NPCProfileInfo, Zoo]):
 	async def post_ok(self, key: ProfileInfo, zuh: Zoo) -> None:
-		rich.print(f"{self.make_counter()} [b][yellow]Fetched the profile of [white]{key}[yellow].")
+		rich.print(f"{self.make_counter()} [b][yellow]Fetched the profile [white]{key}[yellow].")
 		pass
 
 	async def post_err(self, key: UserInfo | ProfileInfo | NPCProfileInfo, err: Exception) -> None:
 		await super().post_err(key, err)
-		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profile of [white]{key}[red]! Skipping...")
+		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profile [white]{key}[red]! Skipping...")
 
 
 @dataclass(kw_only=True)
