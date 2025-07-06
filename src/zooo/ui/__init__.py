@@ -178,4 +178,5 @@ def main():
 		strict=True,
 		show_defaults=False,
 		show_types=False,
+		max_width=term_w - 2,
 	)
