@@ -12,3 +12,4 @@ wheels/
 # tokens
 TOKEN*
 COOKIE*
+*.pkl
