@@ -93,6 +93,7 @@ async def __root__(
 
 	if bake_ids and ids_path is None:
 		rich.print("[b][red]Cannot bake cookies while there's no ids_path to bake with! hmph ( •̀ ⤙ •́ )")
+		exit(1)
 
 	if bake_ids:
 		profiles = api.utils.ProfileInfoFlattener(profiles)
@@ -113,9 +114,7 @@ async def __root__(
 			ids_path.write_text(
 				after := (
 					"\n".join(
-						sorted(
-							(str(prof_info) for prof_info in profile_infos),
-						)
+						sorted(str(prof_info) for prof_info in profile_infos),
 					).strip()
 					+ "\n"
 				)
