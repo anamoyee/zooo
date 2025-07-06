@@ -115,8 +115,6 @@ async def __root__(
 					"\n".join(
 						sorted(
 							(str(prof_info) for prof_info in profile_infos),
-							key=len,
-							reverse=True,
 						)
 					).strip()
 					+ "\n"
