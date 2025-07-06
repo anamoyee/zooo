@@ -1,10 +1,12 @@
-import asyncio
+import logging
 import os
 import pathlib as p
 import sys
+from typing import Annotated
 
 import arguably
-from rich.traceback import install as _rich_traceback_install
+import rich
+from rich.syntax import Syntax
 from tcrutils.console import c
 
 from .. import api
@@ -21,37 +23,121 @@ from .tui import App
 @arguably.command
 async def __root__(
 	*,
-	ids_file: p.Path | None = None,
+	ids_path: p.Path | None = None,
 	ansi_color: bool = False,
 	no_mouse_support: bool = False,
+	import_path: p.Path | None = None,
+	export_path: p.Path | None = None,
+	ix_sync: bool = False,
+	bake_ids: Annotated[int, arguably.arg.count()] = 0,
 	tcr_c_callsite: bool = False,
 ):
 	"""TODO: insert description here when making the README.md or if you forgot right fucking now.
 
 	Args:
-		ids_file: [-f] path to a file that contains newline-separated discord or profile ids.
+		ids_path: [-f] path to a file that contains newline-separated discord or profile ids.
 		ansi_color: [-A] run the app in reduced color palette mode.
 		no_mouse_support: [-M] disable mouse support for the app (by default mouse is supported).
+		import_path: [-i] path to a file containing the previously -x/--exported data
+		export_path: [-x] path to a file to export the data to
+		ix_sync: [-X] if set, when either of -x or -i is provided, set other one to the former. If both or none are provided, raise an error.
+		bake_ids: [-B] [This will overwrite any comments in ids_file!] In the provided ids_file, replace all user IDs with their respective profile IDs, this will speed up fetching later, but will cause not to find all profiles if the user makes a new one, in this case: bake again. Pass this twice to *only bake* (do not display results after baking)
 		tcr_c_callsite: does nothing, just for tcrutils.console	compatibility
 	"""
 
-	if ids_file is None:
-		ids_file = p.Path("ids.txt")
+	if ix_sync:
+		if import_path is None and export_path is None:
+			raise ValueError("One of -x/--export or -i/--import must be provided if --ix-sync is set.")
 
-	profiles = api.utils.parse_ids_from_file(ids_file)
+		if import_path is not None and export_path is not None:
+			raise ValueError("Only one of -x/--export or -i/--import can be provided if --ix-sync is set.")
 
-	user_infos, profile_infos = api.utils.sieve_profiles(profiles)
+		if import_path is None:
+			import_path = export_path
+		else:
+			export_path = import_path
+
+	if ids_path is None:
+		ids_path = p.Path("ids.txt")
+
+	profiles = api.utils.IDParserFromFile(ids_path)
+
+	if import_path is not None:
+		try:
+			imported: list[api.Zoo] = api.type.unpickle_from_file(import_path)
+		except Exception as e:
+			e.add_note("There was an error loading your profiles from this export, please re-export them or if you can't and really want the data try using the same version of zooo as you imported.")
+			raise
+	else:
+		imported = []
+
+	if bake_ids:
+		profiles = api.utils.ProfileInfoFlattener(profiles)
+
+	user_infos, profile_infos = api.utils.ProfileSieve(profiles)
 
 	async with api.Client() as zcl:
 		lps = (await zcl.fetch_profiles_mass(*set(user_infos))).ok_values()
 
 		profile_infos.extend(lp.id for lp in lps)
 
+		imported_profile_infos: list[api.UserInfo | api.ProfileInfo] = []
+		for info in profile_infos:
+			if info in (x.id for x in imported):
+				imported_profile_infos.append(info)
+
+		profile_infos = [info for info in profile_infos if info not in imported_profile_infos]
+
+		if bake_ids:
+			print()
+			rich.print("[b][#ff8000]Baking IDs... ", end="")
+
+			before = ids_path.read_text()
+
+			ids_path.write_text(
+				after := (
+					"\n".join(
+						sorted(
+							(str(prof_info) for prof_info in profile_infos),
+							key=len,
+							reverse=True,
+						)
+					).strip()
+					+ "\n"
+				)
+			)
+
+			before, after = before.strip(), after.strip()
+
+			rich.print("[b][#ff8000]Done! 🍪")
+
+			if before != after:
+				rich.print("\n[b][#ff8000]Before 🤮")
+				rich.print(Syntax(before, "txt"))
+
+				rich.print("\n[b][#ff8000]After ✨")
+				rich.print(Syntax(after, "txt"))
+			else:
+				rich.print("[b][#ff8000]No changes after baking...")
+
+			if bake_ids >= 2:
+				return
+
 		print()  # Add a newline between 'fetching profiles of $x' and 'fetching profie $x'
 		zuhs = (await zcl.fetch_zoo_mass(*set(profile_infos))).ok_values()
 
+	zuhs_including_imported_zuhs = [*zuhs, *imported]
+
+	if imported_profile_infos:
+		rich.print(f"[b][white]-> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
+
+	if export_path:
+		api.type.pickle_to_file(export_path, zuhs_including_imported_zuhs)
+		rich.print(f"[b][white]<- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
+
 	await App(
-		*zuhs,
+		*zuhs_including_imported_zuhs,
+		ids_file=ids_path,
 		ansi_color=ansi_color,
 	).run_async(
 		mouse=not no_mouse_support,
@@ -62,9 +148,28 @@ async def __root__(
 
 
 def main():
+	import rich.logging
+	from rich.traceback import install as _rich_traceback_install
+
 	term_w = os.get_terminal_size().columns
 
-	_rich_traceback_install(width=term_w, code_width=term_w)
+	logging.basicConfig(
+		format="%(message)s",
+		datefmt="[%X]",
+		handlers=[
+			rich.logging.RichHandler(
+				rich_tracebacks=True,
+				tracebacks_show_locals=True,
+				tracebacks_width=term_w,
+				tracebacks_code_width=term_w,
+			)
+		],
+	)
+
+	_rich_traceback_install(
+		width=term_w,
+		code_width=term_w,
+	)
 
 	sys.modules["__main__"].__version__ = __version__  # arguably version fix
 	arguably.run(

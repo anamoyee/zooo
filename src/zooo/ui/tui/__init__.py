@@ -1,7 +1,9 @@
+import pathlib as p
+
 from textual.app import App as BaseApp
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import VerticalScroll
+from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Collapsible, Digits, Label, TabbedContent, TabPane
 
 from ... import api
@@ -17,7 +19,12 @@ class App(BaseApp):
 		Binding("ctrl+c", "quit", "Quit", show=False, priority=True),
 	]
 
-	def __init__(self, *zuhs: api.Zoo, ansi_color: bool = False):
+	def __init__(
+		self,
+		*zuhs: api.Zoo,
+		ids_file: p.Path,
+		ansi_color: bool = False,
+	):
 		self.zuhs = zuhs
 
 		super().__init__(
@@ -57,4 +64,14 @@ class App(BaseApp):
 						title="Collapsible 3 title",
 						collapsed=False,
 					),
+				)
+
+			with TabPane("Utilities"):
+				yield Vertical(
+					Collapsible(
+						Label("Zooo 4"),
+						title="Collapsible 4 title",
+						collapsed=False,
+					),
+					# bake IDs button
 				)

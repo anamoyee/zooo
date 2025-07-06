@@ -4,7 +4,7 @@ from collections.abc import Generator, Iterable
 from .type.info import NPCProfileInfo, ProfileInfo, UserInfo
 
 
-def parse_ids(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCProfileInfo, None, None]:
+def IDParser(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCProfileInfo, None, None]:
 	"""Parse IDs from a file yielding each immediately, if not able, raise ValueError.
 
 	Comments are allowed:
@@ -32,25 +32,37 @@ def parse_ids(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCP
 			raise ValueError(f"Unable to parse {s!r} as either of: NPCProfileInfo, ProfileInfo, or UserInfo") from last_e
 
 
-def parse_ids_from_file(path: p.Path):
+def IDParserFromFile(path: p.Path):
 	"""Yield IDs from a file, if not able, raise ValueError. If there's an issue reading the file let the exception propagate."""
 
 	with path.open() as f:
-		yield from parse_ids(f)
+		yield from IDParser(f)
 
 
-def sieve_profiles(values: Iterable[UserInfo | ProfileInfo | NPCProfileInfo]) -> tuple[list[UserInfo], list[ProfileInfo | NPCProfileInfo]]:
-	"""Sieve out profiles by type (User vs Profile)."""
+def ProfileSieve(infos: Iterable[UserInfo | ProfileInfo | NPCProfileInfo]) -> tuple[list[UserInfo], list[ProfileInfo | NPCProfileInfo]]:
+	"""Sieve out profile infos by type (`UserInfo` vs (`NPC`)`ProfileInfo`)."""
 
 	user_infos = []
 	profile_infos = []
 
-	for value in values:
-		if isinstance(value, UserInfo):
-			user_infos.append(value)
-		elif isinstance(value, ProfileInfo | NPCProfileInfo):
-			profile_infos.append(value)
+	for info in infos:
+		if isinstance(info, UserInfo):
+			user_infos.append(info)
+		elif isinstance(info, ProfileInfo | NPCProfileInfo):
+			profile_infos.append(info)
 		else:
-			raise TypeError(f"Invalid value in profiles: {value!r}")
+			raise TypeError(f"Invalid info in infos: {info!r}")
 
 	return user_infos, profile_infos
+
+
+def ProfileInfoFlattener(infos: UserInfo | ProfileInfo | NPCProfileInfo) -> Generator[UserInfo | NPCProfileInfo]:
+	"""For each `ProfileInfo`, replace it with its `UserInfo`, keep `UserInfo`s and `NPCProfileInfo`s as is."""
+
+	for info in infos:
+		if isinstance(info, UserInfo | NPCProfileInfo):
+			yield info
+		elif isinstance(info, ProfileInfo):
+			yield info.user
+		else:
+			raise TypeError(f"Invalid info in infos: {info!r}")

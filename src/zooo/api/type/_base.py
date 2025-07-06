@@ -1,6 +1,9 @@
+import pickle
 import re as _regex
 from collections.abc import MutableMapping as _MutableMapping
 from enum import IntEnum as _IntEnum
+from pathlib import Path
+from typing import Any
 
 import pydantic as pd
 from pydantic import BaseModel as __BaseModel
@@ -63,3 +66,11 @@ if True:  # Functionality classes
 		def is_emoji_unicode(self) -> bool:
 			"""Whether or not the emoji of this item is a unicode emoji (aka: NOT a discord custom emoji)."""
 			return not self.emoji.startswith("<")
+
+
+def pickle_to_file(path: Path, o: Any) -> None:
+	path.write_bytes(pickle.dumps(o))
+
+
+def unpickle_from_file(path: Path) -> Any:
+	return pickle.loads(path.read_bytes())
