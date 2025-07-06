@@ -19,6 +19,8 @@ from .tui import App
 #  - add --autostart or something argument that would click the aformentioned button right away
 # Bring over the lite command from zms
 
+# if profiles fail to load, give a red toast in Textual app
+
 
 @arguably.command
 async def __root__(
@@ -60,16 +62,37 @@ async def __root__(
 	if ids_path is None:
 		ids_path = p.Path("ids.txt")
 
-	profiles = api.utils.IDParserFromFile(ids_path)
+		if import_path is not None and not ids_path.exists():
+			ids_path = None
+
+	if ids_path:
+		profiles = api.utils.IDParserFromFile(ids_path)
+	else:
+		profiles = []
 
 	if import_path is not None:
 		try:
 			imported: list[api.Zoo] = api.type.unpickle_from_file(import_path)
+		except FileNotFoundError:
+			if import_path == import_path:
+				rich.print(
+					f"[b][red]Import file [white]{import_path.name}[/] doesnt exist, but export_path == import_path, assuming this is the first run or the file was deleted and therefore import as a source is skipped."
+				)
+				imported = []
+			else:
+				rich.print(f"[b][red]Import file [white]{import_path.name}[/] is missing, aborting...[/]")
+				exit(1)
+
 		except Exception as e:
-			e.add_note("There was an error loading your profiles from this export, please re-export them or if you can't and really want the data try using the same version of zooo as you imported.")
+			e.add_note(
+				3 * "\nThere was an error loading your profiles from this export, please re-export them or if you can't and really want the data try using the same version of zooo as you imported."
+			)
 			raise
 	else:
 		imported = []
+
+	if bake_ids and ids_path is None:
+		rich.print("[b][red]Cannot bake cookies while there's no ids_path to bake with! hmph ( •̀ ⤙ •́ )")
 
 	if bake_ids:
 		profiles = api.utils.ProfileInfoFlattener(profiles)
@@ -80,13 +103,6 @@ async def __root__(
 		lps = (await zcl.fetch_profiles_mass(*set(user_infos))).ok_values()
 
 		profile_infos.extend(lp.id for lp in lps)
-
-		imported_profile_infos: list[api.UserInfo | api.ProfileInfo] = []
-		for info in profile_infos:
-			if info in (x.id for x in imported):
-				imported_profile_infos.append(info)
-
-		profile_infos = [info for info in profile_infos if info not in imported_profile_infos]
 
 		if bake_ids:
 			print()
@@ -123,17 +139,27 @@ async def __root__(
 			if bake_ids >= 2:
 				return
 
+		imported_profile_infos: list[api.UserInfo | api.ProfileInfo] = []
+		for info in profile_infos:
+			if info in (x.id for x in imported):
+				imported_profile_infos.append(info)
+
+		profile_infos = [info for info in profile_infos if info not in imported_profile_infos]
+
 		print()  # Add a newline between 'fetching profiles of $x' and 'fetching profie $x'
 		zuhs = (await zcl.fetch_zoo_mass(*set(profile_infos))).ok_values()
 
 	zuhs_including_imported_zuhs = [*zuhs, *imported]
 
+	if imported_profile_infos or export_path:
+		print()  # add a newline before the imports, if any
+
 	if imported_profile_infos:
-		rich.print(f"[b][white]-> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
+		rich.print(f"[b][white]--> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
 
 	if export_path:
 		api.type.pickle_to_file(export_path, zuhs_including_imported_zuhs)
-		rich.print(f"[b][white]<- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
+		rich.print(f"[b][white]<-- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
 
 	await App(
 		*zuhs_including_imported_zuhs,
