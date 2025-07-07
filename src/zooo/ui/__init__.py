@@ -14,7 +14,7 @@ from .. import api
 from .._version import __version__
 from .tui import App
 
-### PLAN ###
+# TODO:
 # Do not add *pos args to __root__ - handle everything in a separate tab setup in textual, other tabs are disabled until pressed a button or something
 #  - but do add --keyword arguments
 #  - add --autostart or something argument that would click the aformentioned button right away
