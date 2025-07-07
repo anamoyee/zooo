@@ -26,7 +26,7 @@ class ListedProfilesHook(BaseHook[UserInfo, list[ListedProfile]]):
 
 	async def post_err(self, key: UserInfo, err: Exception) -> None:
 		await super().post_err(key, err)
-		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profiles of [white]{key}[red]! Skipping...")
+		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profiles of [white]{key}[red] due to {err.__class__.__name__!r}! Skipping...")
 
 
 @dataclass(kw_only=True)

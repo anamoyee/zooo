@@ -19,7 +19,7 @@ class ZooHook(BaseHook[UserInfo | ProfileInfo | NPCProfileInfo, Zoo]):
 
 	async def post_err(self, key: UserInfo | ProfileInfo | NPCProfileInfo, err: Exception) -> None:
 		await super().post_err(key, err)
-		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profile [white]{key}[red]! Skipping...")
+		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profile [white]{key}[red] due to {err.__class__.__name__!r}! Skipping... (consider removing this source from your ids file)")
 
 
 @dataclass(kw_only=True)
