@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib as p
+import random
 import sys
 from typing import Annotated
 
@@ -43,7 +44,7 @@ async def __root__(
 		import_path: [-i] path to a file containing the previously -x/--exported data
 		export_path: [-x] path to a file to export the data to
 		ix_sync: [-X] if set, when either of -x or -i is provided, set other one to the former. If both or none are provided, raise an error.
-		bake_ids: [-B] [This will overwrite any comments in ids_file!] In the provided ids_file, replace all user IDs with their respective profile IDs, this will speed up fetching later, but will cause not to find all profiles if the user makes a new one, in this case: bake again. Pass this twice to *only bake* (do not display results after baking)
+		bake_ids: [-B] [This will rearrange the file potentialy leading to data loss!] In the provided ids_file, pre-fetch and replace all user IDs ("1234") with their respective profile IDs ("1234_fox\\n1234_cat"), this will speed up fetching later, but will cause not to find all profiles if the user makes a new one, in this case: bake again. Pass this twice to *only bake* (do not enter interactive mode afterwards)
 		tcr_c_callsite: does nothing, just for tcrutils.console	compatibility
 	"""
 
@@ -107,7 +108,7 @@ async def __root__(
 
 		if bake_ids:
 			print()
-			rich.print("[b][#ff8000]Baking IDs... ", end="")
+			rich.print(f"[b][#ff8000]Baking {'cookies' if random.randint(0, 100) == 69 else 'IDs'}... ", end="")
 
 			before = ids_path.read_text()
 
@@ -131,7 +132,7 @@ async def __root__(
 				rich.print("\n[b][#ff8000]After ✨")
 				rich.print(Syntax(after, "txt"))
 			else:
-				rich.print("[b][#ff8000]No changes after baking...")
+				rich.print("[b][#ff8000]No changes after baking.")
 
 			if bake_ids >= 2:
 				return
