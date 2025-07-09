@@ -69,7 +69,7 @@ async def __root__(
 			ids_path = None
 
 	if ids_path:
-		profiles = api.utils.IDParserFromFile(ids_path)
+		profiles = api.utils.id_parser_from_file(ids_path)
 	else:
 		profiles = []
 
@@ -99,9 +99,9 @@ async def __root__(
 		exit(1)
 
 	if bake_ids:
-		profiles = api.utils.ProfileInfoFlattener(profiles)
+		profiles = api.utils.profile_info_flattener(profiles)
 
-	user_infos, profile_infos = api.utils.ProfileSieve(profiles)
+	user_infos, profile_infos = api.utils.profile_sieve(profiles)
 
 	async with api.Client() as zcl:
 		lps = (await zcl.fetch_profiles_mass(*set(user_infos))).ok_values()

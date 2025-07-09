@@ -4,7 +4,7 @@ from collections.abc import Generator, Iterable
 from .type.info import NPCProfileInfo, ProfileInfo, UserInfo
 
 
-def IDParser(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCProfileInfo, None, None]:
+def id_parser(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCProfileInfo, None, None]:
 	"""Parse IDs from a file yielding each immediately, if not able, raise ValueError.
 
 	Comments are allowed:
@@ -32,14 +32,14 @@ def IDParser(id_strs: Iterable[str]) -> Generator[UserInfo | ProfileInfo | NPCPr
 			raise ValueError(f"Unable to parse {s!r} as either of: NPCProfileInfo, ProfileInfo, or UserInfo") from last_e
 
 
-def IDParserFromFile(path: p.Path):
+def id_parser_from_file(path: p.Path):
 	"""Yield IDs from a file, if not able, raise ValueError. If there's an issue reading the file let the exception propagate."""
 
 	with path.open() as f:
-		yield from IDParser(f)
+		yield from id_parser(f)
 
 
-def ProfileSieve(infos: Iterable[UserInfo | ProfileInfo | NPCProfileInfo]) -> tuple[list[UserInfo], list[ProfileInfo | NPCProfileInfo]]:
+def profile_sieve(infos: Iterable[UserInfo | ProfileInfo | NPCProfileInfo]) -> tuple[list[UserInfo], list[ProfileInfo | NPCProfileInfo]]:
 	"""Sieve out profile infos by type (`UserInfo` vs (`NPC`)`ProfileInfo`)."""
 
 	user_infos = []
@@ -56,7 +56,7 @@ def ProfileSieve(infos: Iterable[UserInfo | ProfileInfo | NPCProfileInfo]) -> tu
 	return user_infos, profile_infos
 
 
-def ProfileInfoFlattener(infos: UserInfo | ProfileInfo | NPCProfileInfo) -> Generator[UserInfo | NPCProfileInfo]:
+def profile_info_flattener(infos: UserInfo | ProfileInfo | NPCProfileInfo) -> Generator[UserInfo | NPCProfileInfo]:
 	"""For each `ProfileInfo`, replace it with its `UserInfo`, keep `UserInfo`s and `NPCProfileInfo`s as is."""
 
 	for info in infos:
