@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os
 import pathlib as p
@@ -7,6 +8,7 @@ from typing import Annotated
 
 import arguably
 import rich
+from rich import print
 from rich.syntax import Syntax
 from tcrutils.console import c
 
@@ -76,12 +78,12 @@ async def __root__(
 			imported: list[api.Zoo] = api.type.unpickle_from_file(import_path)
 		except FileNotFoundError:
 			if import_path == import_path:
-				rich.print(
+				print(
 					f"[b][red]Import file [white]{import_path.name}[/] doesnt exist, but export_path == import_path, assuming this is the first run or the file was deleted and therefore import as a source is skipped."
 				)
 				imported = []
 			else:
-				rich.print(f"[b][red]Import file [white]{import_path.name}[/] is missing, aborting...[/]")
+				print(f"[b][red]Import file [white]{import_path.name}[/] is missing, aborting...[/]")
 				exit(1)
 
 		except Exception as e:
@@ -93,7 +95,7 @@ async def __root__(
 		imported = []
 
 	if bake_ids and ids_path is None:
-		rich.print("[b][red]Cannot bake cookies while there's no ids_path to bake with! hmph ( •̀ ⤙ •́ )")
+		print("[b][red]Cannot bake cookies while there's no ids_path to bake with! hmph ( •̀ ⤙ •́ )")
 		exit(1)
 
 	if bake_ids:
@@ -104,11 +106,16 @@ async def __root__(
 	async with api.Client() as zcl:
 		lps = (await zcl.fetch_profiles_mass(*set(user_infos))).ok_values()
 
+		_lps1, _lps2 = itertools.tee(lps, 2)
+
+		lps = (lp for lp in _lps1 if lp.viewable)
+		lps_unviewable = (lp for lp in _lps2 if not lp.viewable)
+
 		profile_infos.extend(lp.id for lp in lps)
 
 		if bake_ids:
 			print()
-			rich.print(f"[b][#ff8000]Baking {'cookies' if random.randint(0, 100) == 69 else 'IDs'}... ", end="")
+			print(f"[b][#ff8000]Baking {'cookies' if random.randint(0, 100) == 69 else 'IDs'}... ", end="")
 
 			before = ids_path.read_text()
 
@@ -123,16 +130,16 @@ async def __root__(
 
 			before, after = before.strip(), after.strip()
 
-			rich.print("[b][#ff8000]Done! 🍪")
+			print("[b][#ff8000]Done! 🍪")
 
 			if before != after:
-				rich.print("\n[b][#ff8000]Before 🤮")
-				rich.print(Syntax(before, "txt"))
+				print("\n[b][#ff8000]Before 🤮")
+				print(Syntax(before, "txt"))
 
-				rich.print("\n[b][#ff8000]After ✨")
-				rich.print(Syntax(after, "txt"))
+				print("\n[b][#ff8000]After ✨")
+				print(Syntax(after, "txt"))
 			else:
-				rich.print("[b][#ff8000]No changes after baking.")
+				print("[b][#ff8000]No changes after baking.")
 
 			if bake_ids >= 2:
 				return
@@ -145,6 +152,18 @@ async def __root__(
 		profile_infos = [info for info in profile_infos if info not in imported_profile_infos]
 
 		print()  # Add a newline between 'fetching profiles of $x' and 'fetching profie $x'
+
+		_any_unviewable_profiles = False
+		for unv_lp in lps_unviewable:
+			_any_unviewable_profiles = True
+			print(f"[b][yellow]    The profile [white]{unv_lp.id}[yellow] is not viewable, skipping...")
+
+		if _any_unviewable_profiles:
+			if bake_ids:
+				print(f"[b][yellow]    [white]-->[/] The next time you run zooo without baking, this will be fixed!")
+			else:
+				print(f"[b][yellow]    [white]-->[/] Consider [i white]baking[/] your IDs with [white]--bake[/]")
+
 		zuhs = (await zcl.fetch_zoo_mass(*set(profile_infos))).ok_values()
 
 	zuhs_including_imported_zuhs = [*zuhs, *imported]
@@ -153,11 +172,11 @@ async def __root__(
 		print()  # add a newline before the imports, if any
 
 	if imported_profile_infos:
-		rich.print(f"[b][white]--> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
+		print(f"[b][white]--> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
 
 	if export_path:
 		api.type.pickle_to_file(export_path, zuhs_including_imported_zuhs)
-		rich.print(f"[b][white]<-- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
+		print(f"[b][white]<-- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
 
 	await App(
 		*zuhs_including_imported_zuhs,
