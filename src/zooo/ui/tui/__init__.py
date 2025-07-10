@@ -22,7 +22,6 @@ class App(BaseApp):
 	def __init__(
 		self,
 		*zuhs: api.Zoo,
-		ids_file: p.Path,
 		ansi_color: bool = False,
 	):
 		self.zuhs = zuhs

@@ -181,7 +181,6 @@ async def __root__(
 
 	await App(
 		*zuhs_including_imported_zuhs,
-		ids_file=ids_path,
 		ansi_color=ansi_color,
 	).run_async(
 		mouse=not no_mouse_support,
