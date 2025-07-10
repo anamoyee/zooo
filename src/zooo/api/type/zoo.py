@@ -568,6 +568,11 @@ if True:  # Zoo
 		rare: int
 		"""Rare animals in this profile."""
 
+		@property
+		def total(self) -> int:
+			"""Common + Rare animals in this profile."""
+			return self.common + self.rare
+
 	class ZooAnimal(_ZooObtainable, _MEmoji):
 		"""Represents a single animal in a zoo profile."""
 
