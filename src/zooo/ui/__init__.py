@@ -151,7 +151,8 @@ async def __root__(
 
 		profile_infos = [info for info in profile_infos if info not in imported_profile_infos]
 
-		print()  # Add a newline between 'fetching profiles of $x' and 'fetching profie $x'
+		if profile_infos:
+			print()  # Add a newline between 'fetching profiles of $x' and 'fetching profie $x'
 
 		_any_unviewable_profiles = False
 		for unv_lp in lps_unviewable:
