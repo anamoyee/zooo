@@ -38,6 +38,7 @@ if True:  # f-funcs
 		return "done"
 
 	def ___f_rank_colors(zuhs: list[api.Zoo]):
+		"""Show a leaderboard of zoo colors, which ones are the most used."""
 		counts = Counter(z.color for z in zuhs)
 
 		sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)  # noqa: FURB118
