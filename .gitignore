@@ -12,4 +12,4 @@ wheels/
 TOKEN*
 COOKIE*
 *.pkl
-ids.txt
+ids*.txt

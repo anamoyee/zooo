@@ -1,76 +1,87 @@
+import code
+import pathlib
 import pathlib as p
+import sys
+from collections import Counter
 
-from textual.app import App as BaseApp
-from textual.app import ComposeResult
-from textual.binding import Binding
-from textual.containers import Vertical, VerticalScroll
-from textual.widgets import Collapsible, Digits, Label, TabbedContent, TabPane
+import rich
+import rich.table
+import rich.text
+from rich.table import Table
+from tcrutils.console import c
+from tcrutils.print import FMTC, fmt_iterable
 
 from ... import api
 
+if True:  # f-funcs
 
-class App(BaseApp):
-	CSS = """
-	Screen, VerticalScroll { align: center top; }
-	Digits { width: auto; }
-	"""
+	def ___f_export_to_file(*, file: p.Path):
+		"""In case you forgot to pass the '-x ...' argument you can crudely rectify the situation.
 
-	BINDINGS = [
-		Binding("ctrl+c", "quit", "Quit", show=False, priority=True),
-	]
+		Usage: export_to_file(file=pathlib.Path('./zooo_export.pkl'))
 
-	def __init__(
-		self,
-		*zuhs: api.Zoo,
-		ansi_color: bool = False,
-	):
-		self.zuhs = zuhs
+		This produces the same format as the '-x' switch, but it is not recommended to use this, but rather the aformentioned commandline parameter next time.
+		"""
+		if not isinstance(file, p.Path):
+			raise TypeError(f"file=... must be a pathlib.Path instance, got {type(file).__name__!r} instead.")
 
-		super().__init__(
-			ansi_color=ansi_color,
-		)
+		if file.exists() and not file.is_file():
+			raise ValueError("'file' must either not exist or be a file to overwrite.")
 
-	def on_mount(self):
-		self.query_exactly_one(TabbedContent).active = "tab-2"
+		zuhs: list[api.Zoo] = ___f_export_to_file.__zuhs
 
-	def compose(self) -> ComposeResult:
-		with TabbedContent():
-			with TabPane("Data"):
-				yield VerticalScroll(
-					*(
-						Collapsible(
-							Label(zuh.name),
-							title=f"Details for {zuh.name!r}",
-							collapsed=True,
-						)
-						for zuh in self.zuhs
-					),
-				)
+		api.type.pickle_to_file(file, zuhs)
 
-			with TabPane("Overview"):
-				yield VerticalScroll(
-					Collapsible(
-						Label("Zooo 2"),
-						title="Collapsible 2 title",
-						collapsed=False,
-					),
-				)
+	def ___f_reset_displayhook():
+		"""Remove the colored sys.displayhook (The repl result will no longer be colored from this point onwards.)."""
+		sys.displayhook = sys.__displayhook__
+		return "done"
 
-			with TabPane("Leaderboard"):
-				yield VerticalScroll(
-					Collapsible(
-						Label("Zooo 3"),
-						title="Collapsible 3 title",
-						collapsed=False,
-					),
-				)
+	def ___f_rank_colors(zuhs: list[api.Zoo]):
+		counts = Counter(z.color for z in zuhs)
 
-			with TabPane("Utilities"):
-				yield Vertical(
-					Collapsible(
-						Label("Zooo 4"),
-						title="Collapsible 4 title",
-						collapsed=False,
-					),
-					# bake IDs button
-				)
+		sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)  # noqa: FURB118
+
+		table = Table("#", "amt", "color")
+
+		for i, (color, amount) in enumerate(sorted_counts):
+			table.add_row(str(i), str(amount), rich.text.Text(f"{color:06x}", style=f"b #{color:06x}") if color is not None else rich.text.Text("None", style="i"))
+
+		rich.print(table)
+
+
+def run_tui_simple(*zuhs: api.Zoo):
+	f_funcs_dict = {k.removeprefix("___f_"): v for k, v in globals().items() if k.startswith("___f_")}
+
+	locals_dict = {
+		"zuhs": zuhs,
+		**{k: v for k, v in globals().items() if not k.startswith("___")},
+		**f_funcs_dict,
+	}
+	del locals_dict[run_tui_simple.__name__]  # nesting sessions not supported and WILL cause issues.
+	___f_export_to_file.__zuhs = zuhs
+
+	def _displayhook_fmt(o):
+		return fmt_iterable(o, syntax_highlighting=True, no_implicit_quoteless=True)
+
+	def displayhook(o):
+		if o is zuhs:
+			print("Rendering the entirety of zuhs may take a long time... consider slicing: zuhs[:3], use Ctrl+C to cancel.")
+
+		if o is not None:
+			result = _displayhook_fmt(o)
+			print(result)
+
+	sys.displayhook = displayhook
+
+	code.interact(
+		banner=f"""
+{FMTC.bold}Python {sys.version} on {sys.platform}
+{FMTC.NUMBER}(i){FMTC._} {FMTC.bold}Utility functions available: {FMTC.GD_COLON}{f"{FMTC._}{FMTC.bold}, {FMTC._}{FMTC.GD_COLON}".join(x for x in f_funcs_dict)}
+{0 * "     "}   {FMTC._} {FMTC.bold}Use {FMTC._}{FMTC.GD_COLON}help{FMTC._}{FMTC.BRACKET}({FMTC._}{FMTC.NONE}<func>{FMTC._}{FMTC.BRACKET}){FMTC._}{FMTC.bold} to get more info.{FMTC._}
+>>> len(zuhs)
+{_displayhook_fmt(len(zuhs))}
+"""[1:-1],
+		local=locals_dict,
+		exitmsg="",
+	)

@@ -1,6 +1,34 @@
+if True:  # bootstrap rich traceback & logging first, so any syntax errors in other files also work
+	import logging
+	import os
+
+	import rich.logging
+	from rich.traceback import install as _rich_traceback_install
+
+	term_w = os.get_terminal_size().columns
+
+	logging.basicConfig(
+		level=logging.INFO,
+		format="%(message)s",
+		datefmt="[%X]",
+		handlers=[
+			rich.logging.RichHandler(
+				rich_tracebacks=True,
+				tracebacks_show_locals=False,
+				tracebacks_width=term_w,
+				tracebacks_code_width=term_w,
+			)
+		],
+	)
+
+	_rich_traceback_install(
+		width=term_w,
+		code_width=term_w,
+		show_locals=False,
+	)
+
+
 import itertools
-import logging
-import os
 import pathlib as p
 import random
 import sys
@@ -14,7 +42,7 @@ from tcrutils.console import c
 
 from .. import api
 from .._version import __version__
-from .tui import App
+from .tui import run_tui_simple
 
 # TODO:
 # Do not add *pos args to __root__ - handle everything in a separate tab setup in textual, other tabs are disabled until pressed a button or something
@@ -29,20 +57,16 @@ from .tui import App
 async def __root__(
 	*,
 	ids_path: p.Path | None = None,
-	ansi_color: bool = False,
-	no_mouse_support: bool = False,
 	import_path: p.Path | None = None,
 	export_path: p.Path | None = None,
 	ix_sync: bool = False,
 	bake_ids: Annotated[int, arguably.arg.count()] = 0,
 	tcr_c_callsite: bool = False,
 ):
-	"""TODO: insert description here when making the README.md or if you forgot right fucking now.
+	"""Fetch profile/s from either the internet (gdcolon.com/zoo) or from a locally pickled save object. When fetching finishes, get dropped into an interactive python sessions with a few utility functions to easily analyze your data.
 
 	Args:
 		ids_path: [-f] path to a file that contains newline-separated discord or profile ids.
-		ansi_color: [-A] run the app in reduced color palette mode.
-		no_mouse_support: [-M] disable mouse support for the app (by default mouse is supported).
 		import_path: [-i] path to a file containing the previously -x/--exported data
 		export_path: [-x] path to a file to export the data to
 		ix_sync: [-X] if set, when either of -x or -i is provided, set other one to the former. If both or none are provided, raise an error.
@@ -170,7 +194,7 @@ async def __root__(
 	zuhs_including_imported_zuhs = [*zuhs, *imported]
 
 	if imported_profile_infos or export_path:
-		print()  # add a newline before the imports, if any
+		print()  # add a newline before the imports, if any (1/2)
 
 	if imported_profile_infos:
 		print(f"[b][white]--> [yellow]Imported [white]{len(imported_profile_infos)} [yellow]profiles from [white]{import_path.name}[yellow]!")
@@ -179,41 +203,13 @@ async def __root__(
 		api.type.pickle_to_file(export_path, zuhs_including_imported_zuhs)
 		print(f"[b][white]<-- [yellow]Exported [white]{len(zuhs_including_imported_zuhs)} [yellow]profiles to [white]{export_path.name}[yellow]!")
 
-	await App(
-		*zuhs_including_imported_zuhs,
-		ansi_color=ansi_color,
-	).run_async(
-		mouse=not no_mouse_support,
-	)
+	if imported_profile_infos or export_path:
+		print()  # add a newline before the imports, if any (2/2)
 
-
-# bring over the docstring from zms
+	run_tui_simple(*zuhs_including_imported_zuhs)
 
 
 def main():
-	import rich.logging
-	from rich.traceback import install as _rich_traceback_install
-
-	term_w = os.get_terminal_size().columns
-
-	logging.basicConfig(
-		format="%(message)s",
-		datefmt="[%X]",
-		handlers=[
-			rich.logging.RichHandler(
-				rich_tracebacks=True,
-				tracebacks_show_locals=True,
-				tracebacks_width=term_w,
-				tracebacks_code_width=term_w,
-			)
-		],
-	)
-
-	_rich_traceback_install(
-		width=term_w,
-		code_width=term_w,
-	)
-
 	sys.modules["__main__"].__version__ = __version__  # arguably version fix
 	arguably.run(
 		name="zooo",

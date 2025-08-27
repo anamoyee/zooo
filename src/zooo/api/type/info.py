@@ -36,6 +36,7 @@ class ProfileID(StrEnum):
 		DOVE = "dove"
 		WORM = "worm"
 		SEAL = "seal"
+		DEER = "deer"
 		MOUSE = "mouse"
 		SLOTH = "sloth"
 		HIPPO = "hippo"
@@ -77,7 +78,7 @@ class ProfileID(StrEnum):
 
 		from tcrutils.print import FMT_BRACKETS, FMTC
 
-		return f"{FMTC.TYPE}{self.__class__.__name__}{FMTC._}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
+		return f"{FMTC.TYPE if syntax_highlighting else ''}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ''}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
 
 
 @dataclass(frozen=True)
@@ -156,7 +157,7 @@ class NPCProfileInfo(StrEnum):
 
 		from tcrutils.print import FMT_BRACKETS, FMTC
 
-		return f"{FMTC.TYPE}{self.__class__.__name__}{FMTC._}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
+		return f"{FMTC.TYPE if syntax_highlighting else ''}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ''}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
 
 	@classmethod
 	def from_str(cls, s: str, /):

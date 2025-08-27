@@ -1,5 +1,6 @@
 import json
 from collections.abc import MutableMapping
+from itertools import groupby
 from pathlib import Path
 from typing import Any
 
@@ -144,6 +145,7 @@ if True:  # Enums
 		BATTERY_ACID = "Battery Acid"
 		SILVER_FLUFF = "Silver Fluff"
 		MAGICAL_MOON = "Magical Moon"
+		PRETTY_RIBBON = "Pretty Ribbon"
 		ROBOTOP_BADGE = "RoboTop Badge"
 		HEAVENLY_CLOUD = "Heavenly Cloud"
 		TRAVEL_JOURNAL = "Travel Journal"
@@ -393,7 +395,11 @@ if True:  # Enums
 		BASE_MYSTERY_EGG = "Base Mystery Egg"
 		INVERTED_PYRAMID = "Inverted Pyramid"
 		BLANK_MYSTERY_EGG = "Blank Mystery Egg"
+		MYSTERY_CHICK = "Mystery Chick"
 		GOLDEN_MYSTERY_EGG = "Golden Mystery Egg"
+		CRACKED_MYSTERY_EGG = "Cracked Mystery Egg"
+		HATCHED_MYSTERY_EGG = "Hatched Mystery Egg"
+		VERY_CRACKED_MYSTERY_EGG = "Very Cracked Mystery Egg"
 
 	class LeaderName(_StrEnum):
 		YETI = "Yeti"
@@ -545,7 +551,7 @@ if True:  # Zoo
 	class ZooUser(_BM):
 		"""Basic information about the user of this profile."""
 
-		avatar_url: str = Field(alias="avatar")
+		avatar_url: str | None = Field(alias="avatar")
 		"""Avatar URL of this user."""
 		npc: bool = False
 		"""Whether this profile is an NPC profile. (roboturt, )"""
@@ -595,6 +601,18 @@ if True:  # Zoo
 		"""Whether or not this animal is rare."""
 		pinned: None | PinType = None
 		"""Type of pin, if any."""
+
+		def display(self, *, emoji: bool = True, amount: bool = True, pin: bool = True) -> str:
+			"""Return a string representation of this animal. Allows for slight customisation."""
+			part_emoji = f"{self.emoji} " if emoji else ""
+			part_amount = f"{self.amount}x " if amount else ""
+			part_main = f"{self.name}"
+			part_pin = f" 📌" if pin and self.pinned else ""  # does not support pin types unfortunately
+
+			return f"{part_emoji}{part_amount}{part_main}{part_pin}"
+
+		def __str__(self) -> str:
+			return self.display()
 
 	class ZooItem(_ZooObtainable, _MEmoji):
 		"""Represents an item in a zoo profile."""
@@ -1170,6 +1188,8 @@ if True:  # Zoo
 
 		Reason: Pushpin item was used.
 		"""
+		no_modifiers: bool = False
+		"""[TODO] Not sure what this means...?"""
 
 	class ZooSecretInfoShop(_BM):
 		"""Represents secret info related to the shop in this profile."""
@@ -1331,6 +1351,12 @@ if True:  # Zoo
 		~~Presumably the displayed margin in css px on the zoo website (if this profile is under the 💀 Curse of Distancing)~~.
 		Edit: Colon's pretty sure it's supposed to be a bool, source: 9tbh #zoo-talk https://discord.com/channels/461575285364752384/1010033674424684625/1390120921863426060
 		"""
+
+		disco: bool = False
+		"""Presumably whether the Disco Ball's disco special effect should be working on the web page for certain themes."""
+
+		fog_level: int = 0
+		"""[TODO] I have no idea what this is supposed to mean."""
 
 		@pd.field_validator("distancing_curse", mode="before")
 		@classmethod
@@ -1510,3 +1536,22 @@ if True:  # Zoo
 					v[variant] = 0
 
 			return v
+
+		def animal_pairs(self) -> list[tuple[ZooAnimal | None, ZooAnimal | None]]:
+			"""Return a list of pair of animals: grouped by their family, the common on the left (index 0), rare on the right (index 1). If no counterpart animal is found, it will be `None`."""
+
+			sorted_animals = sorted(self.animals, key=lambda a: a.family)
+			result = []
+
+			for _, group in groupby(sorted_animals, key=lambda a: a.family):
+				common = None
+				rare = None
+				for animal in group:
+					if animal.rare:
+						rare = animal
+					else:
+						common = animal
+				if common and rare:
+					result.append((common, rare))
+
+			return result
