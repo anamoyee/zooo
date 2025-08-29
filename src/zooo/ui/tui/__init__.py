@@ -1,3 +1,4 @@
+import builtins
 import code
 import pathlib
 import pathlib as p
@@ -9,6 +10,7 @@ import rich.table
 import rich.text
 from rich.table import Table
 from tcrutils.console import c
+from tcrutils.decorator import instance
 from tcrutils.print import FMTC, fmt_iterable
 
 from ... import api
@@ -37,18 +39,68 @@ if True:  # f-funcs
 		sys.displayhook = sys.__displayhook__
 		return "done"
 
-	def ___f_rank_colors(zuhs: list[api.Zoo]):
-		"""Show a leaderboard of zoo colors, which ones are the most used."""
+	def ___f_rank_colors(
+		zuhs: list[api.Zoo],
+		*,
+		include_no_color: bool = True,
+		max: int = 10,
+	):
+		"""Show a leaderboard of zoo colors, which ones are the most used.
+
+		Args:
+			zuhs: The list of zuhs (api.Zoo) to operate on, may be a subset you filtered.
+			include_no_color: Whether to include the "Use did not use a paintbrush item to select a color yet on this profile" represented by an italic None. Note that the row with "no color" does not count towards the rank column
+			max: The max amount of rows to display, use -1 to display up to unlimited amount of rows. 10 by default.
+		"""
 		counts = Counter(z.color for z in zuhs)
 
 		sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)  # noqa: FURB118
 
+		if not include_no_color:
+			sorted_counts = [tup for tup in sorted_counts if tup[0] is not None]
+
 		table = Table("#", "amt", "color")
 
-		for i, (color, amount) in enumerate(sorted_counts):
+		i = 0
+		true_i = 0
+
+		for color, amount in sorted_counts:
+			if i == max and max != -1:
+				break
+
+			if color is not None:
+				i += 1
+			true_i += 1
+
 			table.add_row(str(i), str(amount), rich.text.Text(f"{color:06x}", style=f"b #{color:06x}") if color is not None else rich.text.Text("None", style="i"))
 
 		rich.print(table)
+
+		if left_from_max := len(sorted_counts) - true_i:
+			rich.print(f"[i]{left_from_max} rows were truncated, use max=-1 argument to specify no limit[/]")
+
+
+if True:  # repl utils
+
+	@instance
+	class help(builtins.help.__class__):
+		def __or__(self, other):
+			return self(other)
+
+		def __ror__(self, other):
+			return self(other)
+
+		def __rshift__(self, other):
+			return self(other)
+
+		def __rrshift__(self, other):
+			return self(other)
+
+		def __lshift__(self, other):
+			return self(other)
+
+		def __rlshift__(self, other):
+			return self(other)
 
 
 def run_tui_simple(*zuhs: api.Zoo):
