@@ -1,0 +1,10 @@
+{
+    "recommendations":
+        [
+            "redhat.vscode-yaml",
+            "charliermarsh.ruff",
+            "astral-sh.ty",
+            "timonwong.shellcheck",
+            "mads-hartmann.bash-ide-vscode",
+        ],
+}

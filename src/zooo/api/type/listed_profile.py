@@ -1,4 +1,7 @@
-from ._base import _BM, NPCProfileInfo, ProfileInfo, _HexInt, _MEmoji, pd
+from tcrutils.types import HexInt as _HexInt
+
+from ._base import _BM, _MEmoji, pd
+from .info import NPCProfileInfo, ProfileInfo
 
 
 class _ListedProfileIcon(_BM, _MEmoji):
@@ -32,30 +35,30 @@ class ListedProfile(_BM):
 
 	@pd.field_validator("id", mode="before")
 	@classmethod
-	def _v_id(cls, v):
+	def _v_id(cls, v: str) -> ProfileInfo:
 		return ProfileInfo.from_str(v)
 
 	@pd.field_validator("color", mode="before")
 	@classmethod
-	def _v_color(cls, v):
+	def _v_color(cls, v: object) -> _HexInt | None:
 		if v is None:
 			return None
 		return _HexInt(v)
 
 	@pd.field_validator("viewable", mode="before")
 	@classmethod
-	def _v_viewable(cls, v):
+	def _v_viewable(cls, v: object) -> bool:
 		return bool(v)
 
 	@property
-	def is_npc(self):
+	def is_npc(self) -> bool:
 		return isinstance(self.id, NPCProfileInfo)
 
-	def __hash__(self):
+	def __hash__(self) -> int:
 		"""Generate a hash based on the unique `id`."""
 		return hash(self.id)
 
-	def __eq__(self, other):
+	def __eq__(self, other: object) -> bool:
 		"""Determine equality based on the unique `id`."""
 		if isinstance(other, ListedProfile):
 			return self.id == other.id

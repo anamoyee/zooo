@@ -1,13 +1,13 @@
-import json
 from collections.abc import MutableMapping
+from datetime import timedelta
 from itertools import groupby
-from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from tcrutils.compare import able
+from tcrutils.types import HexInt as _HexInt
 from tcrutils.types import UnixTimestampInt as _UnixTimestampInt
 
-from ._base import _BM, Field, NPCProfileInfo, ProfileID, ProfileInfo, UserInfo, _HexInt, _MEmoji, pd
+from ._base import _BM, Field, _MEmoji, pd
+from .info import NPCProfileInfo, ProfileID, ProfileInfo
 
 if True:  # Enums
 	from enum import Enum as _Enum
@@ -15,6 +15,7 @@ if True:  # Enums
 	from enum import StrEnum as _StrEnum
 
 	class AnimalName(_StrEnum):
+		# [autosort]
 		OX = "Ox"
 		BAT = "Bat"
 		CAT = "Cat"
@@ -65,6 +66,9 @@ if True:  # Enums
 		DINOSAUR = "Dinosaur"
 		CROCODILE = "Crocodile"
 		CATERPILLAR = "Caterpillar"
+		# [/autosort]
+
+		# [autosort]
 		OWL = "Owl"
 		RAT = "Rat"
 		RAM = "Ram"
@@ -118,8 +122,10 @@ if True:  # Enums
 		SNOWIER_MAN = "Snowier Man"
 		TROPICAL_FISH = "Tropical Fish"
 		BACTRIAN_CAMEL = "Bactrian Camel"
+		# [/autosort]
 
 	class CosmeticName(_StrEnum):
+		# [autosort]
 		MOAI = "Moai"
 		TORII = "Torii"
 		CROWN = "Crown"
@@ -144,10 +150,8 @@ if True:  # Enums
 		PRAYER_BEADS = "Prayer Beads"
 		BATTERY_ACID = "Battery Acid"
 		SILVER_FLUFF = "Silver Fluff"
-		MAGICAL_MOON = "Magical Moon"
 		PRETTY_RIBBON = "Pretty Ribbon"
 		ROBOTOP_BADGE = "RoboTop Badge"
-		HEAVENLY_CLOUD = "Heavenly Cloud"
 		TRAVEL_JOURNAL = "Travel Journal"
 		CHERRY_BLOSSOM = "Cherry Blossom"
 		GOLDEN_FEATHER = "Golden Feather"
@@ -157,10 +161,23 @@ if True:  # Enums
 		PROGRAMMING_SOCKS = "Programming Socks"
 		VISIBLE_CONFUSION = "Visible Confusion"
 		NON_FUNCTIONAL_TOKEN = "Non-Functional Token"
+		# [/autosort]
+
+		# [autosort]
 		OLD_NAIL = "Old Nail"
 		BLINDFOLD = "Blindfold"
-		OX_TROPHY = "Ox Trophy"
 		TIDAL_WAVE = "Tidal Wave"
+		ANCIENT_AXE = "Ancient Axe"
+		MAGICAL_MOON = "Magical Moon"
+		KILLER_RABBIT = "Killer Rabbit"
+		HEAVENLY_CLOUD = "Heavenly Cloud"
+		CHARM_OF_LEGENDS = "Charm of Legends"
+		SPECIAL_SNOWFLAKE = "Special Snowflake"
+		LE_FISHE_AU_CHOCOLAT = "Le Fishe au Chocolat"
+		# [/autosort]
+
+		# [autosort]
+		OX_TROPHY = "Ox Trophy"
 		FOX_TROPHY = "Fox Trophy"
 		DOG_TROPHY = "Dog Trophy"
 		BAT_TROPHY = "Bat Trophy"
@@ -168,7 +185,6 @@ if True:  # Enums
 		COW_TROPHY = "Cow Trophy"
 		FLY_TROPHY = "Fly Trophy"
 		PIG_TROPHY = "Pig Trophy"
-		ANCIENT_AXE = "Ancient Axe"
 		BEAR_TROPHY = "Bear Trophy"
 		CRAB_TROPHY = "Crab Trophy"
 		DOVE_TROPHY = "Dove Trophy"
@@ -191,7 +207,6 @@ if True:  # Enums
 		SQUID_TROPHY = "Squid Trophy"
 		WHALE_TROPHY = "Whale Trophy"
 		ZEBRA_TROPHY = "Zebra Trophy"
-		KILLER_RABBIT = "Killer Rabbit"
 		PARROT_TROPHY = "Parrot Trophy"
 		BEAVER_TROPHY = "Beaver Trophy"
 		BEETLE_TROPHY = "Beetle Trophy"
@@ -211,11 +226,11 @@ if True:  # Enums
 		ELEPHANT_TROPHY = "Elephant Trophy"
 		HEDGEHOG_TROPHY = "Hedgehog Trophy"
 		DINOSAUR_TROPHY = "Dinosaur Trophy"
-		CHARM_OF_LEGENDS = "Charm of Legends"
 		CROCODILE_TROPHY = "Crocodile Trophy"
-		SPECIAL_SNOWFLAKE = "Special Snowflake"
 		CATERPILLAR_TROPHY = "Caterpillar Trophy"
-		LE_FISHE_AU_CHOCOLAT = "Le Fishe au Chocolat"
+		# [/autosort]
+
+		# [autosort]
 		OWL_TROPHY = "Owl Trophy"
 		RAM_TROPHY = "Ram Trophy"
 		RAT_TROPHY = "Rat Trophy"
@@ -268,6 +283,9 @@ if True:  # Enums
 		SNOWIER_MAN_TROPHY = "Snowier Man Trophy"
 		TROPICAL_FISH_TROPHY = "Tropical Fish Trophy"
 		BACTRIAN_CAMEL_TROPHY = "Bactrian Camel Trophy"
+		# [/autosort]
+
+		# [autosort]
 		YETI_TROPHY = "Yeti Trophy"
 		MANTIS_TROPHY = "Mantis Trophy"
 		KRAKEN_TROPHY = "Kraken Trophy"
@@ -278,8 +296,10 @@ if True:  # Enums
 		GRYPHON_TROPHY = "Gryphon Trophy"
 		BASILISK_TROPHY = "Basilisk Trophy"
 		MINOTAUR_TROPHY = "Minotaur Trophy"
+		# [/autosort]
 
 	class GoalName(_StrEnum):
+		# [autosort]
 		TRADER = "Trader"
 		DEALER = "Dealer"
 		BROKER = "Broker"
@@ -290,6 +310,7 @@ if True:  # Enums
 		PRODIGY = "Prodigy"
 		DEVOTEE = "Devotee"
 		HUSTLER = "Hustler"
+		TINKERER = "Tinkerer"
 		EXPLORER = "Explorer"
 		ASCENDER = "Ascender"
 		RECYCLER = "Recycler"
@@ -307,8 +328,10 @@ if True:  # Enums
 		ADMINISTRATOR = "Administrator"
 		SUPER_EXPLORER = "Super Explorer"
 		PSEUDO_EXPLORER = "Pseudo Explorer"
+		# [/autosort]
 
 	class ItemName(_StrEnum):
+		# [autosort]
 		ACE = "Ace"
 		EGG = "Egg"
 		BALL = "Ball"
@@ -333,6 +356,7 @@ if True:  # Enums
 		COOKIE = "Cookie"
 		CHAINS = "Chains"
 		NEEDLE = "Needle"
+		TAIYAKI = "Taiyaki"
 		COMPASS = "Compass"
 		FEATHER = "Feather"
 		GLASSES = "Glasses"
@@ -349,6 +373,8 @@ if True:  # Enums
 		LOOT_BOX = "Loot Box"
 		OMELETTE = "Omelette"
 		ETHEREUM = "Ethereum"
+		EIGHT_BALL = "8 Ball"
+		FISH_CAKE = "Fish Cake"
 		MEGAPHONE = "Megaphone"
 		RICE_BALL = "Rice Ball"
 		STOPWATCH = "Stopwatch"
@@ -359,7 +385,6 @@ if True:  # Enums
 		TELESCOPE = "Telescope"
 		SCRAP_BIN = "Scrap Bin"
 		GREEN_TEA = "Green Tea"
-		EIGHT_BALL = "8 Ball"
 		CHAIN_LINK = "Chain Link"
 		PAINTBRUSH = "Paintbrush"
 		SAFETY_PIN = "Safety Pin"
@@ -369,11 +394,13 @@ if True:  # Enums
 		BLANK_CARD = "Blank Card"
 		CAKE_SLICE = "Cake Slice"
 		EYEDROPPER = "Eyedropper"
-		ZOO_TOKEN_TM = "Zoo Token™"
+		SHINY_SCRAP = "Shiny Scrap"
+		CHUM_BUCKET = "Chum Bucket"
 		ALARM_CLOCK = "Alarm Clock"
 		FIXED_CLOCK = "Fixed Clock"
 		SCREWDRIVER = "Screwdriver"
 		GREEN_ONION = "Green Onion"
+		ZOO_TOKEN_TM = "Zoo Token™"
 		BROKEN_CLOCK = "Broken Clock"
 		CRYSTAL_BALL = "Crystal Ball"
 		ENERGY_DRINK = "Energy Drink"
@@ -392,9 +419,12 @@ if True:  # Enums
 		BROWSER_COOKIE = "Browser Cookie"
 		BOOSTER_COOKIE = "Booster Cookie"
 		BLUE_CHECKMARK = "Blue Checkmark"
+		AQUARIUM_GRAVEL = "Aquarium Gravel"
 		BASE_MYSTERY_EGG = "Base Mystery Egg"
 		INVERTED_PYRAMID = "Inverted Pyramid"
 		BLANK_MYSTERY_EGG = "Blank Mystery Egg"
+		# [/autosort]
+
 		MYSTERY_CHICK = "Mystery Chick"
 		GOLDEN_MYSTERY_EGG = "Golden Mystery Egg"
 		CRACKED_MYSTERY_EGG = "Cracked Mystery Egg"
@@ -402,6 +432,7 @@ if True:  # Enums
 		VERY_CRACKED_MYSTERY_EGG = "Very Cracked Mystery Egg"
 
 	class LeaderName(_StrEnum):
+		# [autosort]
 		YETI = "Yeti"
 		MANTIS = "Mantis"
 		KRAKEN = "Kraken"
@@ -412,8 +443,10 @@ if True:  # Enums
 		GRYPHON = "Gryphon"
 		BASILISK = "Basilisk"
 		MINOTAUR = "Minotaur"
+		# [/autosort]
 
 	class QuestName(_StrEnum):
+		# [autosort]
 		LONG = "Long Quest"
 		SHORT = "Short Quest"
 		RISKY = "Risky Quest"
@@ -422,8 +455,10 @@ if True:  # Enums
 		PEACEFUL = "Peaceful Quest"
 		PERILOUS = "Perilous Quest"
 		LEGENDARY = "Legendary Quest"
+		# [/autosort]
 
 	class RelicName(_StrEnum):
+		# [autosort]
 		SACK = "Sack"
 		CANDLE = "Candle"
 		API_KEY = "API Key"
@@ -446,8 +481,10 @@ if True:  # Enums
 		VIRTUAL_MACHINE = "Virtual Machine"
 		MAGNIFYING_GLASS = "Magnifying Glass"
 		MAGICAL_SEEDLING = "Magical Seedling"
+		# [/autosort]
 
 	class ThemeID(_StrEnum):
+		# [autosort( (_.index('='), truelen(_)) )]
 		DUO = "duo"
 		NEON = "neon"
 		SHINY = "shiny"
@@ -459,8 +496,8 @@ if True:  # Enums
 		MURPHY = "murphy"
 		DOCTAH = "doctah"
 		ANALOG = "analog"
-		POLARIS = "polaris"
 		FOX_BOY = "colon"
+		POLARIS = "polaris"
 		ROBOTOP = "robotop"
 		MIDNIGHT = "midnight"
 		INVERTED = "inverted"
@@ -470,11 +507,13 @@ if True:  # Enums
 		BASIC_DARK = "none"
 		POWERSHELL = "powershell"
 		UNDERCOVER = "undercover"
-		BASIC_LIGHT = "light"
 		SQUARE_GAME = "gd"
+		BASIC_LIGHT = "light"
 		HOT_DOG_STAND = "hotdog"
+		# [/autosort]
 
 	class ThemeName(_StrEnum):
+		# [autosort]
 		DUO = "Duo"
 		NEON = "Neon"
 		SHINY = "Shiny"
@@ -500,6 +539,7 @@ if True:  # Enums
 		BASIC_LIGHT = "Basic Light"
 		SQUARE_GAME = "Square Game"
 		HOT_DOG_STAND = "Hot Dog Stand"
+		# [/autosort]
 
 	class ThemeCategory(_IntFlag):
 		NONE = 0
@@ -508,14 +548,17 @@ if True:  # Enums
 		EMPTY = 1 << 2
 
 	class PinType(_Enum):
-		RED = "red"
+		RED = "red"  # red always first - not included in autosort
+		# [autosort]
 		BLUE = "blue"
-		GREEN = "green"
-		PURPLE = "purple"
-		HEART = "heart"
 		STAR = "star"
+		GREEN = "green"
+		HEART = "heart"
+		PURPLE = "purple"
+		# [/autosort]
 
 	class AchievementName(_StrEnum):
+		# [autosort]
 		BURDENED = "Burdened"
 		BASS_PRO = "Bass Pro"
 		TUNED_UP = "Tuned Up"
@@ -524,9 +567,10 @@ if True:  # Enums
 		FULLY_AUTOMATIC = "Fully Automatic"
 		TRINKET_COLLECTOR = "Trinket Collector"
 		PROFESSIONAL_PAINTER = "Professional Painter"
+		# [/autosort]
 
 	class AchievementGroup(_Enum):
-		"""The reveal (?) group of an achievement."""
+		"""The (reveal?) group of an achievement."""
 
 		UNGROUPED = "ungrouped"
 		"""Given to all achievements which dont provide a "group" key in their API response's object."""
@@ -599,7 +643,7 @@ if True:  # Zoo
 		"""
 		rare: bool
 		"""Whether or not this animal is rare."""
-		pinned: None | PinType = None
+		pinned: PinType | None = None
 		"""Type of pin, if any."""
 
 		def display(self, *, emoji: bool = True, amount: bool = True, pin: bool = True) -> str:
@@ -607,7 +651,7 @@ if True:  # Zoo
 			part_emoji = f"{self.emoji} " if emoji else ""
 			part_amount = f"{self.amount}x " if amount else ""
 			part_main = f"{self.name}"
-			part_pin = f" 📌" if pin and self.pinned else ""  # does not support pin types unfortunately
+			part_pin = " 📌" if pin and self.pinned else ""  # does not support pin types unfortunately # todo: implement the pin type support
 
 			return f"{part_emoji}{part_amount}{part_main}{part_pin}"
 
@@ -708,7 +752,7 @@ if True:  # Zoo
 	class ZooGoal(_ZooObtainable, _MEmoji):
 		"""Represents a goal in a zoo profile."""
 
-		def __init__(self, **data):
+		def __init__(self, **data: Any):
 			if "description" in data:
 				data["desc"] = data.pop("description")
 			super().__init__(**data)
@@ -787,6 +831,24 @@ if True:  # Zoo
 		cure: ZooCurseEffectsCure
 		"""Effects of this curse's cure."""
 
+	class ZooCurseWeak_Necklace(_BM):
+		emoji: Literal["📿"]
+		name: Literal[RelicName.NECKLACE]
+		id: str
+		extra_curse_days: int
+		weaken_curses: bool
+		note: str
+		desc: str
+
+	class ZooCurseWeak_Nazar(_BM):
+		emoji: Literal["🧿"]
+		name: Literal[ItemName.NAZAR]
+		id: str
+		extra_curse_days: int
+		weaken_curses: bool
+		note: str
+		desc: str
+
 	class ZooCurse(_BM):
 		"""Represents an active curse on this profile."""
 
@@ -794,10 +856,49 @@ if True:  # Zoo
 		"""Full displayname of this curse, example: `'Shackled Curse of Disobedience'`."""
 		names: ZooCurseNames
 		"""Names of this curse `type` and `cure` as separate strings."""
-		weak: bool
+		weak: ZooCurseWeak_Necklace | ZooCurseWeak_Nazar | bool
 		"""Whether or not this curse has been weakened."""
 		effects: ZooCurseEffects
 		"""Effects of this curse's `type` and `cure`."""
+
+	class ZooFishingPebbles(_BM, _MEmoji):
+		amount: int
+		total: int
+
+	class ZooFishingCatchesCategory(_BM, _MEmoji):
+		# todo: finish adding docstrings, not just this class, but all that need them
+		name: str
+		"""Name of this catch category, e.g. 'Common Fish'."""
+
+		catches: int
+		"""The amount of this catch category caught ever (NOT 'in the inventory', but over the lifetime of the profile)."""
+
+	class ZooFishingCatches(_BM):
+		common: ZooFishingCatchesCategory
+		uncommon: ZooFishingCatchesCategory
+		trash: ZooFishingCatchesCategory
+		treasure: ZooFishingCatchesCategory
+
+	class ZooFishingRodPart(_BM, _MEmoji):
+		name: str
+		"""Name of this fishing rod part, e.g. 'Sturdy Pole'."""
+
+	class ZooFishingRod(_BM):
+		pole: ZooFishingRodPart
+		reel: ZooFishingRodPart
+		hook: ZooFishingRodPart
+
+	class ZooFishing(_BM):
+		"""Represents the fishing-related data of this profile."""
+
+		unlocked: bool = False
+		"""Whether or not this profile has the fishing part of the game unlocked."""
+
+		pebbles: ZooFishingPebbles | None = None
+
+		catches: ZooFishingCatches | None = None
+
+		rod: ZooFishingRod | None = None
 
 	class ZooTerminalFishy(_BM):
 		"""Info about the `$ fishy` minigame of this profile."""
@@ -837,24 +938,27 @@ if True:  # Zoo
 
 		@pd.model_validator(mode="before")
 		@classmethod
-		def _flatten_rarities(cls, values):
+		def _flatten_rarities(cls, values: dict[str, Any]) -> dict[str, Any]:
 			"""Extract 'rarities' and merge its contents into the main dictionary.
 
 			## BEFORE
 
 			```
-			{"total": 1234, "rarities": {
-				"c": 1000,
-				"r": 234,
-			}}
+			{
+				"total": 1234,
+				"rarities": {
+					"c": 1000,
+					"r": 234,
+				},
+			}
 			```
 
 			## AFTER
 
 			```
-			{"total": 1234, "c": 1000, "r" 234}
+			{"total": 1234, "c": 1000, "r": 234}
 			```
-			"""
+			"""  # ruff:ignore[docstring-missing-returns] # fmt: skip # <-- required due to the docstring containing indents above the docstring's indentation and my shitty formatter is trying to reformat them to spaces and i dont know how to disable this shit
 			rarities = values.pop("rarities", {})
 			if isinstance(rarities, dict):
 				values.update(rarities)
@@ -1041,34 +1145,51 @@ if True:  # Zoo
 
 		@pd.model_validator(mode="before")
 		@classmethod
-		def _combine_stat_reveal(cls, values: dict[str, Any]):
-			"""Combine the keys 'stat' and 'reveal' into a single struct, returned as key 'reveal'."""
+		def _combine_stat_reveal(cls, values: dict[str, Any]):  # ruff:ignore[missing-return-type-class-method]
+			"""Combine the keys 'stat' and 'reveal' into a single struct, returned as key 'reveal'.
+
+			Raises:
+				ValueError: If only one of the keys 'stat' or 'reveal' is present in the input dictionary.
+				ValueError: If 'stat' and 'reveal' are not both lists of the same length.
+				ValueError: If either 'stat' or 'reveal' is an empty list.
+				ValueError: If the first elements of 'stat' and 'reveal' do not match.
+				ValueError: If both 'stat' and 'reveal' are 3-element lists and their third elements do not match.
+				ValueError: If the first element of 'stat' (and thus 'reveal') is not a string.
+			"""  # ruff:ignore[docstring-missing-returns]
 			if "stat" not in values and "reveal" not in values:
 				return values
 
 			if "stat" not in values or "reveal" not in values:
-				raise ValueError(f'either both or none of keys "stat" and "reveal" must be in ZooUnlockedThemeAchievement(**data), got: {values}')
+				msg_0 = f'either both or none of keys "stat" and "reveal" must be in ZooUnlockedThemeAchievement(**data), got: {values}'
+				raise ValueError(msg_0)
 
 			stat: list = values.pop("stat")
 			reveal: list = values.pop("reveal")
 
 			if not isinstance(stat, list) or not isinstance(reveal, list) or len(stat) != len(reveal):
-				raise ValueError(f'keys "stat" and "reveal" must be lists and the same length, otherwise fix combine_stat_reveal model validator, got: {values}')
+				msg_1 = (
+					f'keys "stat" and "reveal" must be lists and the same length, otherwise fix combine_stat_reveal model validator, got: {values}'
+				)
+				raise ValueError(msg_1)
 
 			if not stat or not reveal:
-				raise ValueError(f'neither of "stat" and "reveal" can be an empty list, got: {values}')
+				msg_2 = f'neither of "stat" and "reveal" can be an empty list, got: {values}'
+				raise ValueError(msg_2)
 
 			if stat[0] != reveal[0]:
-				raise ValueError(f'keys "stat" and "reveal" must have the same first element, otherwise fix combine_stat_reveal model validator, got: {values}')
+				msg_3 = f'keys "stat" and "reveal" must have the same first element, otherwise fix combine_stat_reveal model validator, got: {values}'
+				raise ValueError(msg_3)
 
 			name: str = stat[0]
 
 			if not isinstance(name, str):
-				raise TypeError(f"stat[0] (same as reveal[0]) must be a string, got: {values}")
+				msg_4 = f"stat[0] (same as reveal[0]) must be a string, got: {values}"
+				raise ValueError(msg_4)  # ruff:ignore[type-check-without-type-error]
+				# keeping all as `ValueError`s, for consistency
 
-			if len(stat) == 3:
-				if stat[2] != reveal[2]:
-					raise ValueError(f'keys "stat" and "reveal" must not be 3-element OR have the same third element, otherwise fix combine_stat_reveal model validator, got: {values}')
+			if len(stat) == 3 and stat[2] != reveal[2]:
+				msg_5 = f'keys "stat" and "reveal" must not be 3-element OR have the same third element, otherwise fix combine_stat_reveal model validator, got: {values}'
+				raise ValueError(msg_5)
 
 			values["reveal"] = {
 				"name": name,
@@ -1082,7 +1203,7 @@ if True:  # Zoo
 	class ZooUnlockedTheme(_BM, _MEmoji):
 		"""Represents one of the unlocked themes in a zoo profile (Not to be confused with the `Zoo.theme` which represents the currently selected theme)."""
 
-		def __init__(self, **data):
+		def __init__(self, **data: Any):
 			if "unlockedBy" in data:
 				data["unlockDesc"] = data.pop("unlockedBy")
 
@@ -1110,16 +1231,17 @@ if True:  # Zoo
 
 		@pd.field_validator("color", mode="before")
 		@classmethod
-		def _v_color(cls, v):
+		def _v_color(cls, v: str | None) -> _HexInt | None:
 			if v is None:
 				return None
 			return _HexInt(str(v).removeprefix("#"), base=16)
 
 		@pd.model_validator(mode="before")
 		@classmethod
-		def _combine_categories(cls, values):
+		def _combine_categories(cls, values: dict[str, Any]):  # ruff:ignore[missing-return-type-class-method]
 			values["category"] = ThemeCategory.NONE
 
+			# convert {"basic": True, "joke": True} to ThemeCategory.BASIC | ThemeCategory.JOKE, etc.
 			for k, v in {
 				"basic": ThemeCategory.BASIC,
 				"empty": ThemeCategory.EMPTY,
@@ -1205,14 +1327,14 @@ if True:  # Zoo
 
 		@pd.field_validator("next_credit", mode="before")
 		@classmethod
-		def _v_next_credit(cls, v):
+		def _v_next_credit(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
 
 		@pd.field_validator("last_purchase", mode="before")
 		@classmethod
-		def _v_last_purchase(cls, v):
+		def _v_last_purchase(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
@@ -1234,18 +1356,20 @@ if True:  # Zoo
 		"""[UNIX] When the next `$ pet` is available."""
 		fishy: _UnixTimestampInt | None = None
 		"""[UNIX] When the next `$ fishy` is available."""
+		fishing: _UnixTimestampInt | None = None
+		"""[UNIX] When the next /fish catch is available."""
 		sisyphus: _UnixTimestampInt | None = None
 		"""[UNIX] When the next `$ sisyphus` is available.
 
-	NOTE: This is `None` if user either:
-	- has not used `$ sisyphus` yet
-	- Or the last time they used `$ sisyphus` the boulder fell down
-	The latter  Q is probably a way to make the inner workings of this silly thing simpler but feels like a bug.
-	"""
+		NOTE: This is `None` if user either:
+		- has not used `$ sisyphus` yet
+		- Or the last time they used `$ sisyphus` the boulder fell down
+		The latter  Q is probably a way to make the inner workings of this silly thing simpler but feels like a bug.
+		"""
 
 		@pd.field_validator("*", mode="before")
 		@classmethod
-		def _v_rescue(cls, v):
+		def _v_any_cooldown(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
@@ -1262,7 +1386,7 @@ if True:  # Zoo
 
 		@pd.field_validator("directory", mode="before")
 		@classmethod
-		def _v_directory(cls, v):
+		def _v_directory(cls, v: str | None) -> str:
 			if v is None:
 				return "/root/Zoo/terminal"
 
@@ -1275,17 +1399,22 @@ if True:  # Zoo
 		"""[UNIX] When that player may plant a new seedling."""
 		watered: bool
 		"""Whether or not the player already used up their watering ability this rescue."""
-		longest_plant: int
-		"""Miliseconds since that plant matured."""
+		longest_plant: timedelta
+		"""datetime.timedelta since that plant matured."""
 		sprinkler: int = 0
 		"""Current sprinkler slot, 0 if not in use."""
 
 		@pd.field_validator("next_plant", mode="before")
 		@classmethod
-		def _v_next_plant(cls, v):
+		def _v_next_plant(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
+
+		@pd.field_validator("longest_plant", mode="before")
+		@classmethod
+		def _v_longest_plant(cls, v: int) -> timedelta:
+			return timedelta(milliseconds=v)
 
 	class ZooSecretInfo(_BM):
 		"""[API KEY] Represents secret info related to this profile."""
@@ -1315,28 +1444,28 @@ if True:  # Zoo
 
 		@pd.field_validator("color", mode="before")
 		@classmethod
-		def _v_color(cls, v):
+		def _v_color(cls, v: str | None) -> _HexInt | None:  # todo: is v str or int?
 			if v is None:
 				return None
 			return _HexInt(v)
 
 		@pd.field_validator("quest_end", mode="before")
 		@classmethod
-		def _v_quest_end(cls, v):
+		def _v_quest_end(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
 
 		@pd.field_validator("curse_end", mode="before")
 		@classmethod
-		def _v_curse_end(cls, v):
+		def _v_curse_end(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
 
 		@pd.field_validator("mechanic_end", mode="before")
 		@classmethod
-		def _v_mechanic_end(cls, v):
+		def _v_mechanic_end(cls, v: int | None) -> _UnixTimestampInt | None:
 			if v is None:
 				return None
 			return _UnixTimestampInt(v)
@@ -1360,7 +1489,7 @@ if True:  # Zoo
 
 		@pd.field_validator("distancing_curse", mode="before")
 		@classmethod
-		def _v_distancing_curse(cls, v):
+		def _v_distancing_curse(cls, v: int | bool) -> bool:  # ruff:ignore[boolean-type-hint-positional-argument]
 			if isinstance(v, int):
 				return bool(v)  # presumably if it's 0, then the curse is not active, though it's omitted then
 			if isinstance(v, bool):  # in case Colon ever updates this value to be bool
@@ -1455,7 +1584,9 @@ if True:  # Zoo
 		"""The current quest in this profile."""
 		curse: ZooCurse | None
 		"""The current curse in this profile."""
-		terminal: ZooTerminal = {"unlocked": False}
+		fishing: ZooFishing = {}  # noqa: RUF012  # ty: ignore[invalid-assignment]
+		"""Represents the fishing-related data of this profile."""
+		terminal: ZooTerminal = {}  # noqa: RUF012  # ty: ignore[invalid-assignment]
 		"""Represents the terminal-related data of this profile."""
 		stats: list[ZooStat]
 		"""List of stats for this profile. (I think this never gets used outside of NPC (`Zoo.user.npc`) profiles)"""
@@ -1510,7 +1641,7 @@ if True:  # Zoo
 
 		@pd.field_validator("id", mode="before")
 		@classmethod
-		def _converter_id(cls, value):
+		def _v_id(cls, value: str) -> ProfileInfo | NPCProfileInfo:
 			try:
 				return NPCProfileInfo(value)
 			except ValueError:
@@ -1518,14 +1649,14 @@ if True:  # Zoo
 
 		@pd.field_validator("color", mode="before")
 		@classmethod
-		def _converter_to_hexint(cls, v):
+		def _v_color(cls, v: str | None) -> _HexInt | None:
 			if v is None:
 				return None
 			return _HexInt(v, base=16)
 
 		@pd.field_validator("pinned_animal_score", mode="before")
 		@classmethod
-		def _fill_in_missing_pin_enum_variants(cls, v):
+		def _fill_in_missing_pin_enum_variants(cls, v):  # ruff:ignore[missing-return-type-class-method, missing-type-function-argument]
 			if not isinstance(v, MutableMapping):
 				return {}
 

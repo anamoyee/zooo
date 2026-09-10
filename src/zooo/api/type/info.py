@@ -1,9 +1,6 @@
-import profile
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Self
-
-from aiohttp.helpers import validate_etag_value
 
 
 class ProfileID(StrEnum):
@@ -72,13 +69,16 @@ class ProfileID(StrEnum):
 		CROCODILE = "crocodile"
 		CATERPILLAR = "caterpillar"
 
-	def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
-		if self is None:
-			raise NotImplementedError
+	# todo: implement __nya_fmt__ - the impl is needed for easy builtin repl usage (with the nya.Formatter __displayhook__).
+	# def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
+	# 	if self is None:
+	# 		raise NotImplementedError
 
-		from tcrutils.print import FMT_BRACKETS, FMTC
+	# 	from tcrutils.print import FMT_BRACKETS, FMTC
 
-		return f"{FMTC.TYPE if syntax_highlighting else ''}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ''}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
+	# 	return f"{FMTC.TYPE if syntax_highlighting else ""}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ""}" + FMT_BRACKETS[tuple][
+	# 		syntax_highlighting
+	# 	] % fmt_iterable(str(self))
 
 
 @dataclass(frozen=True)
@@ -90,18 +90,24 @@ class UserInfo:
 	def __str__(self):
 		return f"{self.discord_id}"
 
-	def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
-		if self is None:
-			raise NotImplementedError
+	# todo: implement __nya_fmt__ - the impl is needed for easy builtin repl usage (with the nya.Formatter __displayhook__).
+	# def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
+	# 	if self is None:
+	# 		raise NotImplementedError
 
-		from tcrutils.print import FMT_BRACKETS
+	# 	from tcrutils.print import FMT_BRACKETS
 
-		return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(self.discord_id)
+	# 	return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(self.discord_id)
 
 	@classmethod
 	def from_str(cls, s: str, /) -> Self:
+		"""Try to create a UserInfo from a string, if not able, raise ValueError."""
+
+		# todo: add more robust validation (see discord docs and check what is the range of the int value,)
+
 		if not s.isdigit():
-			raise ValueError("Invalid user info string: invalid discord id")
+			msg = "Invalid user info string: invalid discord id"
+			raise ValueError(msg)
 
 		return cls(int(s))
 
@@ -121,8 +127,9 @@ class ProfileInfo:
 	def from_str(cls, s: str, /) -> Self:
 		"""Try to create a ProfileInfo from a string, if not able, raise ValueError."""
 
-		if not s.count("_") == 1:
-			raise ValueError("Invalid profile info string: invalid number of `'_'` characters")
+		if s.count("_") != 1:
+			msg = "Invalid profile info string: invalid number of `'_'` characters"
+			raise ValueError(msg)
 
 		discord_id_str, profile_id_str = s.split("_")
 
@@ -135,13 +142,14 @@ class ProfileInfo:
 	def __str__(self):
 		return f"{self.user}_{self.profile_id}"
 
-	def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
-		if self is None:
-			raise NotImplementedError
+	# todo: implement __nya_fmt__ - the impl is needed for easy builtin repl usage (with the nya.Formatter __displayhook__).
+	# def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
+	# 	if self is None:
+	# 		raise NotImplementedError
 
-		from tcrutils.print import FMT_BRACKETS
+	# 	from tcrutils.print import FMT_BRACKETS
 
-		return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
+	# 	return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
 
 
 class NPCProfileInfo(StrEnum):
@@ -151,15 +159,18 @@ class NPCProfileInfo(StrEnum):
 	JAXPER = "jaxper"
 	OTTO = "otto"
 
-	def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
-		if self is None:
-			raise NotImplementedError
+	# todo: implement __nya_fmt__ - the impl is needed for easy builtin repl usage (with the nya.Formatter __displayhook__).
+	# def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
+	# 	if self is None:
+	# 		raise NotImplementedError
 
-		from tcrutils.print import FMT_BRACKETS, FMTC
+	# 	from tcrutils.print import FMT_BRACKETS, FMTC
 
-		return f"{FMTC.TYPE if syntax_highlighting else ''}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ''}" + FMT_BRACKETS[tuple][syntax_highlighting] % fmt_iterable(str(self))
+	# 	return f"{FMTC.TYPE if syntax_highlighting else ""}{self.__class__.__name__}{FMTC._ if syntax_highlighting else ""}" + FMT_BRACKETS[tuple][
+	# 		syntax_highlighting
+	# 	] % fmt_iterable(str(self))
 
 	@classmethod
-	def from_str(cls, s: str, /):
+	def from_str(cls, s: str, /) -> Self:
 		"""Try to create an NPCProfileInfo from a string, if not able, raise ValueError."""
 		return cls(s)  # raises ValueError

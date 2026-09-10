@@ -1,6 +1,8 @@
 import asyncio
-from collections.abc import Callable
+from collections import UserDict
+from collections.abc import Callable, Collection, Generator
 from dataclasses import dataclass, field
+from typing import Any
 
 import aiohttp
 import rich
@@ -9,32 +11,52 @@ from tcrutils.result import aresultify2 as aresultify
 
 from .. import error
 from ..type import NPCProfileInfo, ProfileInfo, UserInfo, Zoo
-from ._base import BaseClient, BaseHook, ResultDict
+from ._base import BaseClient, BaseHook
+
+
+class ResultDict[K, V, E: BaseException](UserDict[K, Result[V, E]]):
+	def ok_values(self) -> Generator[V]:
+		return (r.unwrap() for r in self.values() if r.is_ok)
 
 
 class ZooHook(BaseHook[UserInfo | ProfileInfo | NPCProfileInfo, Zoo]):
-	async def post_ok(self, key: ProfileInfo, zuh: Zoo) -> None:
+	async def post_ok(
+		self,
+		key: UserInfo | ProfileInfo | NPCProfileInfo,
+		zuh: Zoo,
+	) -> None:
 		rich.print(f"{self.make_counter()} [b][yellow]Fetched the profile [white]{key}[yellow].")
-		pass
 
-	async def post_err(self, key: UserInfo | ProfileInfo | NPCProfileInfo, err: Exception) -> None:
+	async def post_err(
+		self,
+		key: UserInfo | ProfileInfo | NPCProfileInfo,
+		err: Exception,
+	) -> None:
 		await super().post_err(key, err)
-		rich.print(f"{self.make_counter()} [b][red]Failed to fetch profile [white]{key}[red] due to {err.__class__.__name__!r}! Skipping... (consider removing this source from your ids file)")
+		rich.print(
+			f"{self.make_counter()} [b][red]Failed to fetch profile [white]{key}[red] due to {err.__class__.__name__!r}! Skipping... (consider removing this source from your ids file)"
+		)
 
 
 @dataclass(kw_only=True)
 class ZooClient(BaseClient):
-	zoo_hook_factory: Callable[[], ZooHook] = field(default=ZooHook)
+	zoo_hook_factory: Callable[[Collection[UserInfo | ProfileInfo | NPCProfileInfo]], ZooHook] = field(default=ZooHook)
 
 	async def _request_zoo(
 		self,
-		user: UserInfo | ProfileInfo,
-	) -> tuple[aiohttp.ClientResponse, str, Result[dict, error.ZooError | Exception]]:
+		user: UserInfo | ProfileInfo | NPCProfileInfo | int,
+	) -> tuple[aiohttp.ClientResponse, str, Result[dict[str, Any], error.ZooError | Exception]]:
 		"""Perform a single request to colon's API and return the JSON data.
 
+		Returns:
+			3-tuple of:
+			- `aiohttp.ClientResponse` object
+			- `str` of the raw text response
+			- `Result[dict[str, Any], error.ZooError | Exception]` of the JSON data or an error
+
 		Raises:
-		- zooo.error.ZooError (if the API returns an error)
-		- aiohttp error (if anything else goes wrong)
+			InternalError: if the API returns an InternalError
+			aiohttp error if anything else goes wrong
 		"""
 		url = f"{self.base_url}/profile/{user}"
 
@@ -43,21 +65,31 @@ class ZooClient(BaseClient):
 		if self.cookie is not None and "Cookie" not in headers:
 			headers["Cookie"] = self.cookie
 
-		async with self.rate_limiter:
-			async with self.session.get(url=url, headers=headers) as resp:
-				if resp.status == 500:
-					data = await resp.json()
+		async with self.rate_limiter, self.session.get(url=url, headers=headers) as resp:
+			if resp.status == 500:
+				data: object = await resp.json()
 
-					raise error.InternalError(raw_json=data, msg=data.get("message", ""))
+				if not isinstance(data, dict):
+					data = {
+						"name": "InternalError",
+						"msg": "The API returned an InternalError, but the response was not a JSON object.",
+						"type": "internal",
+					}
 
-				text = await resp.text()
+				raise error.InternalError(
+					raw_json=data,
+					name=data.get("name", ""),
+					msg=data.get("message", ""),
+				)
 
-				try:
-					data = Result.new_ok(await resp.json())
-				except Exception as e:
-					data = Result.new_err(e)
+			text = await resp.text()
 
-				return resp, text, data
+			try:
+				data = Result.new_ok(await resp.json())
+			except Exception as e:
+				data = Result.new_err(e)
+
+			return resp, text, data
 
 	@aresultify
 	async def fetch_zoo(self, user: UserInfo | ProfileInfo | NPCProfileInfo | int) -> Zoo:
@@ -72,14 +104,17 @@ class ZooClient(BaseClient):
 
 		error.raise_from_data(data)
 
-		return Zoo(**data)
+		return Zoo(**data)  # <- Let the validation error propagate.
 
-	async def fetch_zoo_mass(self, *users: UserInfo | ProfileInfo | int) -> ResultDict[UserInfo | ProfileInfo | NPCProfileInfo, Zoo, Exception]:
+	async def fetch_zoo_mass(
+		self,
+		*users: UserInfo | NPCProfileInfo | ProfileInfo | int,
+	) -> ResultDict[UserInfo | ProfileInfo | NPCProfileInfo, Zoo, Exception]:
 		users: set[UserInfo | ProfileInfo | NPCProfileInfo] = {(UserInfo(user) if isinstance(user, int) else user) for user in users}
 
 		hook = self.zoo_hook_factory(users)
 
-		async def task(user: UserInfo | ProfileInfo | NPCProfileInfo):
+		async def task(user: UserInfo | ProfileInfo | NPCProfileInfo) -> tuple[UserInfo | ProfileInfo | NPCProfileInfo, Result[Zoo, Exception]]:
 			await hook._pre_submit(user)
 
 			zoo_result = await self.fetch_zoo(user)

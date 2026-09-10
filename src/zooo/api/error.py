@@ -1,17 +1,26 @@
+from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass as _dataclass
+from typing import TYPE_CHECKING, Any, Literal
 
 from .._version import __version__
 
 
-def error_from_data(data: dict) -> "None | Error":
-	"""If passed in data contains an error, return that error, otherwise return None."""
+def error_from_data(data: dict) -> Error | None:
+	r"""If passed in data contains an error, return that error, otherwise return None.
+
+	Returns:
+		`None` if no error was found in the data; \
+		`Error` subclass instance if an error was found in the data;
+	"""
 	if not isinstance(data, dict):
 		return None
 
 	if not (data.get("apiError") or data.get("error") or data.get("invalid")):
 		return None
 
-	err_type = data.get("error", "")
+	err_type: str | None = data.get("error", "")
 
 	if err_type not in PROFILE_ERROR_MAPPING:
 		err_type = None
@@ -20,7 +29,7 @@ def error_from_data(data: dict) -> "None | Error":
 		raw_json=data,
 		name=data.get("name", ""),
 		msg=data.get("msg", ""),
-		type=err_type,
+		type=err_type if err_type is not None else "<base>",
 	)
 
 
@@ -44,7 +53,8 @@ class Error(Exception):
 	def __str__(self) -> str:
 		return str(self.raw_json)
 
-	def __tcr_fmt__(self=None, *, fmt_iterable, syntax_highlighting, **kwargs):
+	# todo: remove all __tcr_fmt__, replace them with __nya_fmt__
+	def __tcr_fmt__(self=None, *, fmt_iterable: Callable[[Any], str], syntax_highlighting: bool, **kwargs: Any):
 		if self is None:
 			raise NotImplementedError
 
@@ -54,7 +64,9 @@ class Error(Exception):
 
 		field_items = {k: getattr(self, k) for k in field_names}
 
-		return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % (FMT_ASTERISK[syntax_highlighting] + fmt_iterable(field_items))
+		return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % (
+			FMT_ASTERISK[syntax_highlighting] + fmt_iterable(field_items)
+		)
 
 
 @_dataclass
@@ -90,17 +102,29 @@ class ZooError(ZooMsgError):
 class ZooDisabledError(ZooError):
 	"""Requesqted profile's info is unavailable because it has been disabled by Colon."""
 
+	if TYPE_CHECKING:
+		type: Literal["profileDisabled"]
+
 
 class ZooNotFoundError(ZooError):
 	"""Requested profile doesn't seem to exist."""
+
+	if TYPE_CHECKING:
+		type: Literal["notFound"]
 
 
 class ZooPrivateError(ZooError):
 	"""Requested profile is set to private by its owner and cannot be publicly viewed."""
 
+	if TYPE_CHECKING:
+		type: Literal["private"]
+
 
 class ZooCursedError(ZooError):
 	"""Requested profile is under a 💀 Curse of Invisibility."""
+
+	if TYPE_CHECKING:
+		type: Literal["invisible"]
 
 
 PROFILE_ERROR_MAPPING = {
@@ -146,7 +170,7 @@ def add_helpful_note_to_validation_error(e: BaseException):
 
 {color_red}\
 pydantic.ValidationError - HOW TO FIX
-	The above error may be caused by an outdated zoo version (current version: {__version__})
+	The above error may be caused by an outdated zooo version (current version: {__version__})
 	Please update with (run this in your terminal/cmd):
 		{color_green}{executable} -m pip install --upgrade zooo{color_red}
 	If there are no new versions (you noticed it did not update) you can try running the command later

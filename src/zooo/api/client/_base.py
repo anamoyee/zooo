@@ -1,6 +1,5 @@
 import asyncio
-import functools
-from collections.abc import Generator, Sequence
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from typing import Self
 
@@ -21,7 +20,7 @@ class BaseClient:
 	async def __aenter__(self) -> Self:
 		return self
 
-	async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+	async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # ruff: ignore[missing-type-function-argument]
 		await self.close()
 
 	async def close(self) -> None:
@@ -30,22 +29,22 @@ class BaseClient:
 
 
 class BaseHook[K, T]:
-	@classmethod
-	def _lock_wrapper(cls, method_name: str):
-		orig_method = getattr(cls, method_name, None)
-		if not orig_method:
-			return cls
+	# @classmethod
+	# def _lock_wrapper(cls, method_name: str):
+	# 	orig_method = getattr(cls, method_name, None)
+	# 	if not orig_method:
+	# 		return cls
 
-		@functools.wraps(orig_method)
-		async def wrapped(self, *args, **kwargs):
-			async with self.lock:
-				return await orig_method(self, *args, **kwargs)
+	# 	@functools.wraps(orig_method)
+	# 	async def wrapped(self, *args, **kwargs):
+	# 		async with self.lock:
+	# 			return await orig_method(self, *args, **kwargs)
 
-		setattr(cls, method_name, wrapped)
-		return cls
+	# 	setattr(cls, method_name, wrapped)
+	# 	return cls
 
 	alock: asyncio.Lock
-	keys: Sequence[K]
+	keys: Collection[K]
 
 	@property
 	def ii(self) -> int:
@@ -53,7 +52,7 @@ class BaseHook[K, T]:
 
 	i: int
 
-	def __init__(self, keys: Sequence[K]) -> None:
+	def __init__(self, keys: Collection[K]) -> None:
 		self.alock = asyncio.Lock()
 		self.keys = keys
 		self.i = 0
@@ -76,7 +75,7 @@ class BaseHook[K, T]:
 	def make_counter(self) -> str:
 		width = len(str(self.ii))
 
-		return f"[b][black]{'[dim]0[/dim]' * (width - len(str(self.i)))}{self.i}[white]/[/][black]{self.ii}[/][/b]"
+		return f"[b][gray]{"[#555555]0[/#555555]" * (width - len(str(self.i)))}{self.i}[white]/[/][gray]{self.ii}[/][/b]"
 
 	async def pre(self, key: K, /) -> None:
 		"""Called before every request."""
@@ -95,8 +94,3 @@ class BaseHook[K, T]:
 				c(err.raw_json)
 
 			raise err
-
-
-class ResultDict[K, V, E](dict[K, Result[V, E]]):
-	def ok_values(self) -> Generator[V]:
-		return (r.unwrap() for r in self.values() if r.is_ok)
