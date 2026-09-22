@@ -23,7 +23,7 @@
                     [
                         {
                             "id": "ruff-check",
-                            "args": ["--fix", "--ignore", "FIX"],
+                            "args": ["--ignore", "line-contains-todo"],
                         },
                         { "id": "ruff-format" },
                     ],
