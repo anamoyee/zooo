@@ -897,21 +897,6 @@ if True:  # Zoo
 
 		rod: ZooFishingRod | None = None
 
-	# todo: remove all now unused mentions of fishy, including the secretinfo "next fishy" timestamp
-	class ZooTerminalFishy(_BM):
-		"""Info about the `$ fishy` minigame of this profile."""
-
-		common: int = Field(alias="commonFish")
-		"""Number of common fish."""
-		uncommon: int = Field(alias="uncommonFish")
-		"""Number of uncommon fish."""
-		rare: int = Field(alias="rareFish")
-		"""Number of rare fish."""
-		trash: int
-		"""Number of trash."""
-		pebbles: int
-		"""Number of pebbles."""
-
 	class ZooTerminalGarden(_BM):
 		"""Info about the `$ garden` of this profile."""
 
@@ -1011,8 +996,6 @@ if True:  # Zoo
 		"""Amount of findable commands found in this profile."""
 		mechanic_points: int = 0
 		"""Amount of murphy points this profile contains."""
-		fishy: ZooTerminalFishy | None = None
-		"""Info about the `$ fishy` minigame of this profile."""
 		garden: ZooTerminalGarden | None = pd.Field(default=None, repr=False)
 		"""Info about the `$ garden` of this profile."""
 		cards: ZooTerminalCards | None = None
@@ -1352,8 +1335,6 @@ if True:  # Zoo
 		"""[UNIX] When the next card pull is available."""
 		pet: _UnixTimestampInt | None = None
 		"""[UNIX] When the next `$ pet` is available."""
-		fishy: _UnixTimestampInt | None = None
-		"""[UNIX] When the next `$ fishy` is available."""
 		fishing: _UnixTimestampInt | None = None
 		"""[UNIX] When the next /fish catch is available."""
 		sisyphus: _UnixTimestampInt | None = None
