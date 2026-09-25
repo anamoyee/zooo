@@ -54,8 +54,6 @@ class _BM(__BaseModel):
 		try:
 			super().__init__(**data)
 		except pd.ValidationError as e:
-			# e.raw_json = data # todo: is the raw json actually doing anything?
-
 			add_helpful_note_to_validation_error(e)
 
 			raise
@@ -76,7 +74,10 @@ class _BM(__BaseModel):
 		"""For now let's not worry about the '_apiKey' key, ignoring it since it's useless so it's just not included in the profile object."""
 
 
-if True:  # Functionality classes
+if True:  # Functionality/parts/mixin classes
+	# classes here should not define methods like _MEmoji.is_unicode(), as it would be ambigous what is unicode,
+	# since the name of the later subclass will not make it obvious that the is the `.emoji` field being checked
+	# for unicode. Prefer something like `.is_emoji_unicode()`
 
 	class _MEmoji:
 		"""Lets pydantic models inherit `.emoji` and `.emoji`-related methods."""
@@ -92,7 +93,14 @@ if True:  # Functionality classes
 			"""
 			return not self.emoji.startswith("<")
 
+	class _MObtainable(_BM):
+		"""Represents obtainable object in Zoo, not used standalone, only subclassed."""
 
+		obtained: bool = True
+		"""Whether or not this item has been obtained in this profile, if False it means it has been derived either due to direct request or parsing (that is: This profile does not have this item/animal/cosmetic/etc. and if possible, it's amount is 0, if there's no 'amount' field you have to rely on this field)."""
+
+
+# todo: convert pickling to use json
 def pickle_to_file(path: Path, o: Any) -> None:
 	path.write_bytes(pickle.dumps(o))
 

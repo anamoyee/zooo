@@ -1,8 +1,5 @@
-from dataclasses import dataclass as _dataclass
+from ._impl._joint_client import Client
 
-from .listed_profile import ListedProfilesClient
-from .zoo import ZooClient
-
-
-@_dataclass
-class Client(ZooClient, ListedProfilesClient): ...
+__all__ = [
+	"Client",
+]

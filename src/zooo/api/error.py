@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Sequence
 from dataclasses import dataclass as _dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from dataclasses import field as _field
+from typing import TYPE_CHECKING, Literal
 
 from .._version import __version__
 
+if TYPE_CHECKING:
+	import pydantic
 
-def error_from_data(data: dict) -> Error | None:
+	from .utils import Json
+
+
+def error_from_data(data: dict) -> ZoooError | None:
 	r"""If passed in data contains an error, return that error, otherwise return None.
 
 	Returns:
@@ -45,33 +51,36 @@ def raise_from_data(data: dict) -> None:
 
 
 @_dataclass(kw_only=True)
-class Error(Exception):
-	"""Base class for all `zooo` errors."""
+class ZoooError(Exception):
+	"""Base class for all `zooo` library errors, this does not include exception groups due to some technical reasons."""
 
-	raw_json: dict
+	raw_json: Json = _field(repr=False)
 
 	def __str__(self) -> str:
 		return str(self.raw_json)
 
 	# todo: remove all __tcr_fmt__, replace them with __nya_fmt__
-	def __tcr_fmt__(self=None, *, fmt_iterable: Callable[[Any], str], syntax_highlighting: bool, **kwargs: Any):
-		if self is None:
-			raise NotImplementedError
+	# def __tcr_fmt__(self=None, *, fmt_iterable: Callable[[Any], str], syntax_highlighting: bool, **kwargs: Any):
+	# 	if self is None:
+	# 		raise NotImplementedError
 
-		from tcrutils.print import FMT_ASTERISK, FMT_BRACKETS
+	# 	from tcrutils.print import FMT_ASTERISK, FMT_BRACKETS
 
-		field_names = {k for k in self.__dataclass_fields__ if k != "raw_json"}
+	# 	field_names = {k for k in self.__dataclass_fields__ if k != "raw_json"}
 
-		field_items = {k: getattr(self, k) for k in field_names}
+	# 	field_items = {k: getattr(self, k) for k in field_names}
 
-		return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % (
-			FMT_ASTERISK[syntax_highlighting] + fmt_iterable(field_items)
-		)
+	# 	return fmt_iterable(self.__class__) + FMT_BRACKETS[tuple][syntax_highlighting] % (
+	# 		FMT_ASTERISK[syntax_highlighting] + fmt_iterable(field_items)
+	# 	)
 
 
-@_dataclass
-class InternalError(Error):
+@_dataclass(kw_only=True)
+class InternalError(ZoooError):
 	"""Colon's servers reported an internal error."""
+
+	if TYPE_CHECKING:
+		raw_json: dict[str, Json]
 
 	name: str
 	msg: str
@@ -81,8 +90,11 @@ class InternalError(Error):
 
 
 @_dataclass(kw_only=True)
-class ZooMsgError(Error):
+class ZooMsgError(ZoooError):
 	"""Base class for all Zoo & Profiles errors, except the InternalError which does not follow the spec."""
+
+	if TYPE_CHECKING:
+		raw_json: dict[str, Json]
 
 	name: str
 	msg: str
@@ -90,6 +102,11 @@ class ZooMsgError(Error):
 
 	def __str__(self) -> str:
 		return f"{self.name}: {self.msg} (type={self.type!r})"
+
+
+@_dataclass(kw_only=True)
+class MalformedJsonResponseError(ZoooError):
+	"""The API returned a malformed JSON response that could not be parsed as really anything, not even talking about the proper type (e.g. a list where a dict was expected)."""
 
 
 # Zoo
@@ -144,6 +161,13 @@ class ListedProfileError(ZooMsgError):
 
 class ListedProfileNotFoundError(ListedProfileError):
 	"""Requested user doesnt seem to have any profiles."""
+
+
+class ListedProfileValidationErrorGroup(ExceptionGroup):
+	"""A group of `pydantic.ValidationError`s that occurred while parsing a list of `ListedProfile` objects."""
+
+	if TYPE_CHECKING:
+		exceptions: Sequence[pydantic.ValidationError]
 
 
 ####################

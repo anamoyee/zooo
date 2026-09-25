@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 	from ... import api
 
-from nya_fmt import Formatter
+from nya_fmt import Fmt
 
 from . import f_funcs
 
@@ -40,7 +40,7 @@ def run_tui_simple(*zuhs: api.Zoo):
 		**f_funcs.REGISTERED.get_dict(),
 	}
 
-	fmt = Formatter(no_quoteless_str=True)
+	fmt = Fmt(no_quoteless_str=True)
 
 	def displayhook(o: Any):
 		# intentionally not doing a `if o is None: return`, because i want to keep it printing None, for less confusion

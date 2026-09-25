@@ -3,6 +3,8 @@ from collections.abc import Generator, Iterable
 
 from .type.info import NPCProfileInfo, ProfileInfo, UserInfo
 
+type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
+
 
 def profile_info_parse_from_str(s: str, /) -> UserInfo | ProfileInfo | NPCProfileInfo:
 	"""Parse IDs from a string, if not able raise ValueError.

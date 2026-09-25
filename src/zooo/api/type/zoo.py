@@ -3,10 +3,10 @@ from datetime import timedelta
 from itertools import groupby
 from typing import Any, Literal
 
-from tcrutils.types import HexInt as _HexInt
-from tcrutils.types import UnixTimestampInt as _UnixTimestampInt
+from nya_fmt.formatter.types import HexInt as _HexInt
+from nya_fmt.formatter.types import UnixTimestampInt as _UnixTimestampInt
 
-from ._base import _BM, Field, _MEmoji, pd
+from ._base import _BM, Field, _MEmoji, _MObtainable, pd
 from .info import NPCProfileInfo, ProfileID, ProfileInfo
 
 if True:  # Enums
@@ -581,15 +581,6 @@ if True:  # Enums
 		TERMINAL_PLUS = "terminal+"
 
 
-if True:  # Functionality classes
-
-	class _ZooObtainable(_BM):
-		"""Represents obtainable object in Zoo, not used standalone, only subclassed."""
-
-		obtained: bool = True
-		"""Whether or not this item has been obtained in this profile, if False it means it has been derived either due to direct request or parsing (that is: This profile does not have this item/animal/cosmetic/etc. and if possible, it's amount is 0, if there's no 'amount' field you have to rely on this field)."""
-
-
 if True:  # Zoo
 
 	class ZooUser(_BM):
@@ -623,7 +614,7 @@ if True:  # Zoo
 			"""Common + Rare animals in this profile."""
 			return self.common + self.rare
 
-	class ZooAnimal(_ZooObtainable, _MEmoji):
+	class ZooAnimal(_MObtainable, _MEmoji):
 		"""Represents a single animal in a zoo profile."""
 
 		name: AnimalName
@@ -646,19 +637,25 @@ if True:  # Zoo
 		pinned: PinType | None = None
 		"""Type of pin, if any."""
 
-		def display(self, *, emoji: bool = True, amount: bool = True, pin: bool = True) -> str:
+		def display(
+			self,
+			*,
+			emoji: bool = True,
+			amount: bool = True,
+			pin: bool = True,
+		) -> str:
 			"""Return a string representation of this animal. Allows for slight customisation."""
 			part_emoji = f"{self.emoji} " if emoji else ""
 			part_amount = f"{self.amount}x " if amount else ""
 			part_main = f"{self.name}"
-			part_pin = " 📌" if pin and self.pinned else ""  # does not support pin types unfortunately # todo: implement the pin type support
+			part_pin = " 📌" if pin and self.pinned else ""  # does not support pin types unfortunately
 
 			return f"{part_emoji}{part_amount}{part_main}{part_pin}"
 
 		def __str__(self) -> str:
 			return self.display()
 
-	class ZooItem(_ZooObtainable, _MEmoji):
+	class ZooItem(_MObtainable, _MEmoji):
 		"""Represents an item in a zoo profile."""
 
 		name: ItemName
@@ -681,7 +678,7 @@ if True:  # Zoo
 		unlisted: bool = False
 		"""TODO: what does this do? note to myself: seems to be set on most but not all not_counted items..."""
 
-	class ZooRelic(_ZooObtainable, _MEmoji):
+	class ZooRelic(_MObtainable, _MEmoji):
 		"""Represents a relic in a zoo profile."""
 
 		name: RelicName
@@ -696,7 +693,7 @@ if True:  # Zoo
 		special: bool
 		"""Whether or not this relic is tagged as 'special' (is displayed with empahsis on the website)."""
 
-	class ZooCosmetic(_ZooObtainable, _MEmoji):
+	class ZooCosmetic(_MObtainable, _MEmoji):
 		"""Represents a cosmetic in a zoo profile."""
 
 		name: CosmeticName
@@ -721,7 +718,7 @@ if True:  # Zoo
 		leader_charm: bool = False
 		"""Whether or not this cosmetic is tagged as a leader charm cosmetic."""
 
-	class ZooLeader(_ZooObtainable, _MEmoji):
+	class ZooLeader(_MObtainable, _MEmoji):
 		"""Represents a leader in a zoo profile."""
 
 		name: LeaderName
@@ -735,7 +732,7 @@ if True:  # Zoo
 		level: int = 0
 		"""Level of this leader."""
 
-	class ZooListedQuest(_ZooObtainable, _MEmoji):
+	class ZooListedQuest(_MObtainable, _MEmoji):
 		"""Represents one of the discovered by the user quests in a zoo profile. Not to be confused with `Zoo.quest` which is a the ongoing quest in that profile."""
 
 		name: QuestName
@@ -749,7 +746,7 @@ if True:  # Zoo
 		completed: int | None = None
 		"""How many times this quest has been completed on this profile (None if not obtained.)."""
 
-	class ZooGoal(_ZooObtainable, _MEmoji):
+	class ZooGoal(_MObtainable, _MEmoji):
 		"""Represents a goal in a zoo profile."""
 
 		def __init__(self, **data: Any):
@@ -900,6 +897,7 @@ if True:  # Zoo
 
 		rod: ZooFishingRod | None = None
 
+	# todo: remove all now unused mentions of fishy, including the secretinfo "next fishy" timestamp
 	class ZooTerminalFishy(_BM):
 		"""Info about the `$ fishy` minigame of this profile."""
 
@@ -1015,11 +1013,11 @@ if True:  # Zoo
 		"""Amount of murphy points this profile contains."""
 		fishy: ZooTerminalFishy | None = None
 		"""Info about the `$ fishy` minigame of this profile."""
-		garden: ZooTerminalGarden | None = None
+		garden: ZooTerminalGarden | None = pd.Field(default=None, repr=False)
 		"""Info about the `$ garden` of this profile."""
 		cards: ZooTerminalCards | None = None
 		"""Info about the cards of this profile."""
-		fusion: ZooTerminalFusion | None = None
+		fusion: ZooTerminalFusion | None = pd.Field(default=None, repr=False)
 		"""Info about the fusions & NFBs of this profile."""
 
 	class ZooStat(_BM):
@@ -1379,7 +1377,7 @@ if True:  # Zoo
 
 		directory: str
 		"""The current terminal directory, for example `'/var/scams'`."""
-		commands: list[str]
+		commands: list[str] = pd.Field(repr=False)
 		"""A list of all "collectable" (by that i mean they show up here and in `$help` i guess) terminal commands that were found on this profile."""
 		next_fusion: int = 0
 		"""Number of rescues until the next fusion can be made."""
@@ -1425,13 +1423,13 @@ if True:  # Zoo
 		"""Is that literally just Zoo.color but int and not str(hex(this))??"""
 		promises: ZooSecretInfoPromises = Field(alias="promise")
 		"""Represents promises given to this profile by Zoo."""
-		quest_end: _UnixTimestampInt | None
+		quest_end: _UnixTimestampInt | None = pd.Field(repr=False)
 		"""[UNIX] If this profile has a quest in progress, this is the unix timestamp when it will be complete."""
-		quest_boosts: ZooSecretInfoQuestBoosts
+		quest_boosts: ZooSecretInfoQuestBoosts = pd.Field(repr=False)
 		"""Represents quest promises given to this profile by Zoo."""
-		curse_end: _UnixTimestampInt | None
+		curse_end: _UnixTimestampInt | None = pd.Field(repr=False)
 		"""[UNIX] If this profile has a curse, this is the unix timestamp when it will naturally expire."""
-		mechanic_end: _UnixTimestampInt | None
+		mechanic_end: _UnixTimestampInt | None = pd.Field(repr=False)
 		"""[UNIX] If this profile has a mechanic upgrade in progress, this is the unix timestamp when it will be complete."""
 		shop: ZooSecretInfoShop
 		"""Represents secret info related to the shop in this profile."""
@@ -1444,7 +1442,12 @@ if True:  # Zoo
 
 		@pd.field_validator("color", mode="before")
 		@classmethod
-		def _v_color(cls, v: str | None) -> _HexInt | None:  # todo: is v str or int?
+		def _v_color(cls, v: str | int | None) -> _HexInt | None:
+			# note about the annotation: there was previously a 'str | None' annotation and a comment
+			# stating 'todo: is v str or int?', i went ahead and investigated, and found that it's int
+			# in the one test i did, so i just expanded the union by adding int, the str might have been
+			# added there for a reason? maybe it's str in some cases? either way, the validator should
+			# work for both so no harm done here
 			if v is None:
 				return None
 			return _HexInt(v)
@@ -1501,7 +1504,7 @@ if True:  # Zoo
 
 		id: ProfileInfo | NPCProfileInfo
 		"""Full str ID of this profile, for example `'1234123412341234_kitsune'`."""
-		selected_profile: str
+		selected_profile: ProfileID
 		"""Profile ID of the selected profile of this user at the time of the API request."""
 		profiles: list[ProfileID]
 		"""List of all (visible) profile IDs owned by this user."""
@@ -1537,9 +1540,9 @@ if True:  # Zoo
 		"""Completion percentage of this profile."""
 		unique_animals: ZooUniqueAnimals
 		"""Unique common, rare or all animals in this profile."""
-		total_animals: ZooTotalAnimals
+		total_animals: ZooTotalAnimals = pd.Field(repr=False)
 		"""Common or rare total (non-unique) animals in this profile."""
-		pinned_animal_score: dict[PinType, int]
+		pinned_animal_score: dict[PinType, int] = pd.Field(repr=False)
 		"""Score as returned by the API (not computed), on a pin-by-pin basis. For example animals pinned with the red pin have this much score amongst them.
 
 		If the item is not a part of the dictionary, its pin count is 0, use pinned_animal_score.get(..., 0)
@@ -1568,35 +1571,35 @@ if True:  # Zoo
 		"""Number of unspent rescue notifications in this profile."""
 		auto_rescues: int
 		"""Number of unspent auto-rescues in this profile."""
-		animals: list[ZooAnimal]
+		animals: list[ZooAnimal] = pd.Field(repr=False)
 		"""List of unparsed animals (zero-amount = excluded) in this profile."""
-		items: list[ZooItem]
+		items: list[ZooItem] = pd.Field(repr=False)
 		"""List of unparsed items (zero-amount = excluded) in this profile."""
-		relics: list[ZooRelic]
+		relics: list[ZooRelic] = pd.Field(repr=False)
 		"""List of unparsed relics (unobtained = excluded) in this profile."""
-		cosmetics: list[ZooCosmetic]
+		cosmetics: list[ZooCosmetic] = pd.Field(repr=False)
 		"""List of unparsed cosmetics (unobtained = excluded) in this profile."""
-		leaders: list[ZooLeader]
+		leaders: list[ZooLeader] = pd.Field(repr=False)
 		"""List of unparsed leaders (unobtained = excluded) in this profile."""
-		quests: list[ZooListedQuest]
+		quests: list[ZooListedQuest] = pd.Field(repr=False)
 		"""List of unparsed quests (undiscovered = excluded) in this profile."""
 		quest: ZooCurrentQuest | None
 		"""The current quest in this profile."""
 		curse: ZooCurse | None
 		"""The current curse in this profile."""
-		fishing: ZooFishing = {}  # noqa: RUF012  # ty: ignore[invalid-assignment]
+		fishing: ZooFishing = pd.Field(default_factory=ZooFishing, repr=False)
 		"""Represents the fishing-related data of this profile."""
-		terminal: ZooTerminal = {}  # noqa: RUF012  # ty: ignore[invalid-assignment]
+		terminal: ZooTerminal = pd.Field(default_factory=ZooTerminal)
 		"""Represents the terminal-related data of this profile."""
 		stats: list[ZooStat]
 		"""List of stats for this profile. (I think this never gets used outside of NPC (`Zoo.user.npc`) profiles)"""
-		goals: list[ZooGoal]
+		goals: list[ZooGoal] = pd.Field(repr=False)
 		"""List of unparsed (undiscovered = excluded) goals in this profile."""
 		goal_tiers: int = 0
 		"""Total goal tiers achieved by this profile."""
 		goal_completes: int = Field(alias="goalsComplete")  # For consistency with 'goal_tiers'
 		"""Total goals completed achieved by this profile."""
-		extra_data: list[list]  # pydantic wont let me do list[list[str, str] | list[str, str, int]]
+		extra_data: list[list] = pd.Field(repr=False)  # pydantic wont let me do list[list[str, str] | list[str, str, int]]
 		"""Extra data: list[list[str, str] | list[str, str, int]], that means: a list of {a list that can contain 2 strings or 2 strings and 1 int}
 
 		This is used to store data such as:
@@ -1629,7 +1632,7 @@ if True:  # Zoo
 		"""
 		settings: ZooSettings
 		"""The user-selected `/settings` of this profile."""
-		unlocked_themes: list[ZooUnlockedTheme] = Field(default_factory=list)
+		unlocked_themes: list[ZooUnlockedTheme] = Field(default_factory=list, repr=False)
 		"""A list of unlocked themes in this profile.
 
 		May be `[]` if not authorised with a cookie (`.owner`).

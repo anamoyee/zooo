@@ -1,5 +1,4 @@
 from aiolimiter import AsyncLimiter as AsyncLimiter
-from tcrutils.result import Result2 as Result  # ruff:ignore[unused-import]
 
 from . import error as error
 from . import type as type  # ruff:ignore[builtin-import-shadowing]
