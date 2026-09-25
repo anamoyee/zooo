@@ -1,5 +1,3 @@
-import pickle
-from pathlib import Path
 from typing import Any
 
 import pydantic as pd
@@ -98,12 +96,3 @@ if True:  # Functionality/parts/mixin classes
 
 		obtained: bool = True
 		"""Whether or not this item has been obtained in this profile, if False it means it has been derived either due to direct request or parsing (that is: This profile does not have this item/animal/cosmetic/etc. and if possible, it's amount is 0, if there's no 'amount' field you have to rely on this field)."""
-
-
-# todo: convert pickling to use json
-def pickle_to_file(path: Path, o: Any) -> None:
-	path.write_bytes(pickle.dumps(o))
-
-
-def unpickle_from_file(path: Path) -> Any:
-	return pickle.loads(path.read_bytes())
