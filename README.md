@@ -18,6 +18,7 @@
 3. Run `.venv/bin/pre-commit install`
 4. Use github pull requests feature (make an issue if it's a large change, or one that might be controversial)
 	- I'm not making any guarantees your code will be merged, but all PRs and issues (except fully AI generated ones) are welcome.
+    	- I might decide to adjust your code more or less before merging
 
 
 # AI Policy
