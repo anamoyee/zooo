@@ -23,5 +23,6 @@
 # AI Policy
 - Using simple AI autocomplete is ok
 - Asking an AI assistant to help, debug, write some simple tedious function is fine
-- **Generating large patches of code, or fully generating code is __not allowed__**
-- You should disclose usage of AI more significant than simple autocomplete (you may do this as a non-missable comment in PR description)
+- **Generating large patches of code, or fully generating code is <u>not allowed</u>**
+- You should disclose usage of AI more significant than simple autocomplete
+	- you may do this with a non-easily-missable comment in PR description
